@@ -1,0 +1,35 @@
+.tb{
+    width:90% !important;
+    margin:20px auto;
+    border-radius:15px;
+    overflow:hidden;
+    border-collapse:separate;
+    border-spacing:0;
+}
+td, th{
+   text-align:center;
+   vertical-align:middle;
+}
+th{
+   color:#06B6D4 !important;
+}
+.cb{
+    text-align:center;
+     
+     color:white;
+     margin:20px;
+
+}
+.table td,
+.table th{
+    text-align:center;
+    vertical-align:middle;
+}
+
+.table th:first-child,
+.table td:first-child{
+    text-align:center;
+}
+.table{
+    margin-bottom:0 !important;
+}

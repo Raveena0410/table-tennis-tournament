@@ -1,0 +1,50 @@
+
+
+.cards{
+    display:flex;
+    align-items:center;
+    justify-content: center;
+    
+    padding:40px 0;
+    gap:20px;
+    background-color: #0F172A;
+     flex-wrap:wrap;
+    
+    
+}
+.card1{
+    width:25%;
+    display:flex;
+    align-items:center;
+    justify-content: center;
+    
+    flex-direction:column;
+    border:1px solid black;
+    padding:10px;
+    background-color: #1E293B;
+    color: #06B6D4;
+    border-radius:15px;
+
+
+
+}
+ul{
+    list-style: none;
+    color: #FFFFFF;
+}
+.card3{
+     border: 1px solid #06B6D4;
+     
+      width:95%;
+    margin:0 auto;
+    margin-top:20px;
+    
+    text-align: center;
+    color:white;
+    padding-top:15px;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(6,182,212,0.2);
+    
+    
+
+}
