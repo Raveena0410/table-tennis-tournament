@@ -245,5 +245,162 @@ router.get('/teams', async(req,res)=>{
     res.json(data)
 
 })
+// =====================================
+// GENERATE MATCHES
+// =====================================
+
+router.post(
+   '/generatematches',
+
+   async(req,res)=>{
+
+      try{
+
+         const teams =
+         await Team.find()
+
+         let matches = []
+
+         let currentDate =
+         new Date()
+
+         for(let i=0; i<teams.length; i++){
+
+            for(let j=i+1; j<teams.length; j++){
+
+               matches.push({
+
+                  teamA:teams[i].team,
+
+                  teamB:teams[j].team,
+
+                  winner:"",
+
+                  set:[],
+
+                  date:new Date(currentDate)
+
+               })
+
+               currentDate.setDate(
+
+                  currentDate.getDate()+1
+
+               )
+
+            }
+
+         }
+
+         await Match.insertMany(matches)
+
+         res.json({
+
+            message:"Matches Generated"
+
+         })
+
+      }
+
+      catch(err){
+
+         console.log(err)
+
+      }
+
+})
+// =====================================
+// GET MATCHES
+// =====================================
+
+router.get(
+   '/matches',
+
+   async(req,res)=>{
+
+      try{
+
+         const data =
+         await Match.find()
+
+         res.json(data)
+
+      }
+
+      catch(err){
+
+         console.log(err)
+
+      }
+
+})
+// =====================================
+// RESCHEDULE MATCH
+// =====================================
+
+router.put(
+   '/reschedule/:id',
+
+   async(req,res)=>{
+
+      try{
+
+         const {date} = req.body
+
+         const currentMatch =
+         await Match.findById(
+
+            req.params.id
+
+         )
+
+         currentMatch.date = date
+
+         await currentMatch.save()
+
+         const nextMatches =
+         await Match.find({
+
+            date:{
+
+               $gt:currentMatch.date
+
+            }
+
+         }).sort({date:1})
+
+         let nextDate =
+         new Date(date)
+
+         for(let item of nextMatches){
+
+            nextDate.setDate(
+
+               nextDate.getDate()+1
+
+            )
+
+            item.date =
+            new Date(nextDate)
+
+            await item.save()
+
+         }
+
+         res.json({
+
+            message:"Match Rescheduled"
+
+         })
+
+      }
+
+      catch(err){
+
+         console.log(err)
+
+      }
+
+})
 
 module.exports = router;
