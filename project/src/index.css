@@ -1,23 +1,22 @@
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
-
-
-
+html,
+body,
 #root{
-  background-color:#0F172A;
-  min-height:100vh;
-}
-html,body{
-    margin:0;
-    padding:0;
+    width:100%;
+    min-height:100vh;
     overflow-x:hidden;
     background:#03133a;
 }
 
-.main-container{
-    border:none;
-    box-shadow:none;
+body{
+    overflow-y:auto;
+}
+
+.container,
+.container-fluid{
+    margin-bottom:0 !important;
+    padding-bottom:0 !important;
+}
+
+pre{
+    margin-bottom:0 !important;
 }
