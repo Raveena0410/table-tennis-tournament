@@ -1,33 +1,47 @@
 const express = require('express')
+
 const Match = require('../model/model')
+
 const Team = require('../model/model1')
-const Login=require('../model/model2')
-const bcrypt = require("bcrypt");
 
-const jwt = require("jsonwebtoken");
+const Login = require('../model/model2')
 
+const bcrypt = require("bcrypt")
+
+const jwt = require("jsonwebtoken")
 
 const router = express.Router()
+
+
+
+// =====================================
+// ADD MATCH RESULT
+// =====================================
 
 router.post('/', async (req, res) => {
 
    try {
 
-      await Match.create(req.body);
+      await Match.create(req.body)
 
-      const { teamA, teamB, set, winner } = req.body;
+      const { teamA, teamB, set, winner } = req.body
 
-      let teamAsetwon = 0;
-      let teamBsetwon = 0;
+      let teamAsetwon = 0
+
+      let teamBsetwon = 0
 
       set.forEach((item) => {
 
          if (item.teamA_set > item.teamB_set) {
-            teamAsetwon++;
+
+            teamAsetwon++
+
          }
 
          else {
-            teamBsetwon++;
+
+            teamBsetwon++
+
          }
 
       })
@@ -47,7 +61,8 @@ router.post('/', async (req, res) => {
                   setlost: teamBsetwon
                }
             },
-             { upsert:true, new:true }
+
+            { upsert: true, new: true }
 
          )
 
@@ -63,7 +78,8 @@ router.post('/', async (req, res) => {
                   setlost: teamAsetwon
                }
             },
-             { upsert:true, new:true }
+
+            { upsert: true, new: true }
 
          )
 
@@ -83,9 +99,9 @@ router.post('/', async (req, res) => {
                   setwon: teamBsetwon,
                   setlost: teamAsetwon
                }
-               
             },
-             { upsert:true, new:true }
+
+            { upsert: true, new: true }
 
          )
 
@@ -100,31 +116,31 @@ router.post('/', async (req, res) => {
                   setwon: teamAsetwon,
                   setlost: teamBsetwon
                }
-                
             },
-            { upsert:true, new:true }
+
+            { upsert: true, new: true }
 
          )
 
       }
 
-      const teams = await Team.find();
+      const teams = await Team.find()
 
       for (let item of teams) {
 
          if (item.setlost === 0) {
 
-            item.ratio = item.setwon;
+            item.ratio = item.setwon
 
          }
 
          else {
 
-            item.ratio = item.setwon / item.setlost;
+            item.ratio = item.setwon / item.setlost
 
          }
 
-         await item.save();
+         await item.save()
 
       }
 
@@ -138,11 +154,17 @@ router.post('/', async (req, res) => {
 
    catch (err) {
 
-      console.log(err);
+      console.log(err)
 
    }
 
 })
+
+
+
+// =====================================
+// LEADERBOARD
+// =====================================
 
 router.get('/lead', async (req, res) => {
 
@@ -155,252 +177,344 @@ router.get('/lead', async (req, res) => {
 
       })
 
-      res.json(t);
+      res.json(t)
 
    }
 
    catch (err) {
 
-      console.log(err);
+      console.log(err)
 
    }
 
 })
-router.post('/signup',async (req,res)=>{
-   try{
-   const{email,password}=req.body;
-   const hashpassword=await bcrypt.hash(password,10);
-   const user=new Login({
-      email,
-      password:hashpassword
-   })
-   await user.save()
-   res.json({
-      message:"register successfully"
-   })
-}
-catch(err){
-   res.json({
-      message:"user is not registered"
-   })
-}
 
 
 
-})
-router.post('/login',async (req,res)=>{
-   try{
-      const{email,password}=req.body;
-      const user=await Login.findOne({
-         email
+// =====================================
+// SIGNUP
+// =====================================
+
+router.post('/signup', async (req, res) => {
+
+   try {
+
+      const { email, password } = req.body
+
+      const hashpassword = await bcrypt.hash(password, 10)
+
+      const user = new Login({
+
+         email,
+         password: hashpassword
+
       })
-      if(!user){
-         res.json({
-            message:"user is not found"
-         })
-      }
-      const match=await bcrypt.compare(password,user.password)
-      if(!match){
-         res.json({
-            message:"incorrect password"
-         })
-      }
-       const token=jwt.sign(
-        {userId:user._id},
-        "secret-",
-        {expiresIn:"1h"}
 
-    )
-    res.json({ token });
+      await user.save()
 
+      res.json({
 
-      
+         message: "register successfully"
+
+      })
 
    }
-catch(err){
-   console.log(err)
-}
 
+   catch (err) {
 
-})
-router.get('/', async(req,res)=>{
-   const p=await Match.find()
-   res.json(p)
-})
-router.post('/addteam', async(req,res)=>{
+      res.json({
 
-    const newTeam = new Team(req.body)
+         message: "user is not registered"
 
-    await newTeam.save()
+      })
 
-    res.json({
-        message: "Team Added"
-    })
+   }
 
 })
-router.get('/teams', async(req,res)=>{
 
-    const data = await Team.find()
 
-    res.json(data)
 
-})
 // =====================================
-// GENERATE MATCHES
+// LOGIN
 // =====================================
 
-router.post(
-   '/generatematches',
+router.post('/login', async (req, res) => {
 
-   async(req,res)=>{
+   try {
 
-      try{
+      const { email, password } = req.body
 
-         const teams =
-         await Team.find()
+      const user = await Login.findOne({
 
-         let matches = []
+         email
 
-         let currentDate =
-         new Date()
+      })
 
-         for(let i=0; i<teams.length; i++){
+      if (!user) {
 
-            for(let j=i+1; j<teams.length; j++){
+         return res.json({
 
-               matches.push({
-
-                  teamA:teams[i].team,
-
-                  teamB:teams[j].team,
-
-                  winner:"",
-
-                  set:[],
-
-                  date:new Date(currentDate)
-
-               })
-
-               currentDate.setDate(
-
-                  currentDate.getDate()+1
-
-               )
-
-            }
-
-         }
-
-         await Match.insertMany(matches)
-
-         res.json({
-
-            message:"Matches Generated"
+            message: "user is not found"
 
          })
 
       }
 
-      catch(err){
+      const match = await bcrypt.compare(
 
-         console.log(err)
+         password,
+         user.password
+
+      )
+
+      if (!match) {
+
+         return res.json({
+
+            message: "incorrect password"
+
+         })
 
       }
+
+      const token = jwt.sign(
+
+         { userId: user._id },
+
+         "secret-",
+
+         { expiresIn: "1h" }
+
+      )
+
+      res.json({ token })
+
+   }
+
+   catch (err) {
+
+      console.log(err)
+
+   }
 
 })
-// =====================================
-// GET MATCHES
-// =====================================
 
-router.get(
-   '/matches',
 
-   async(req,res)=>{
 
-      try{
 
-         const data =
-         await Match.find()
+// GET ALL MATCHES
 
-         res.json(data)
 
-      }
+router.get('/', async (req, res) => {
 
-      catch(err){
+   const p = await Match.find()
 
-         console.log(err)
-
-      }
+   res.json(p)
 
 })
-// =====================================
-// RESCHEDULE MATCH
-// =====================================
 
-router.put(
-   '/reschedule/:id',
 
-   async(req,res)=>{
 
-      try{
 
-         const {date} = req.body
+// ADD TEAM + GENERATE MATCHES
 
-         const currentMatch =
-         await Match.findById(
 
-            req.params.id
+router.post('/addteam', async (req, res) => {
 
-         )
+   try {
 
-         currentMatch.date = date
+      const newTeam = new Team(req.body)
 
-         await currentMatch.save()
+      await newTeam.save()
 
-         const nextMatches =
-         await Match.find({
+      // DELETE OLD MATCHES
+      await Match.deleteMany()
 
-            date:{
+      // GET ALL TEAMS
+      const teams = await Team.find().sort({
+         team:1
+      })
 
-               $gt:currentMatch.date
+      let matches = []
 
-            }
+      let currentDate = new Date()
 
-         }).sort({date:1})
+      currentDate.setHours(0,0,0,0)
 
-         let nextDate =
-         new Date(date)
+      for (let i = 0; i < teams.length; i++) {
 
-         for(let item of nextMatches){
+         for (let j = i + 1; j < teams.length; j++) {
 
-            nextDate.setDate(
+            const matchDate = new Date(currentDate)
 
-               nextDate.getDate()+1
+            matchDate.setHours(0,0,0,0)
+
+            matches.push({
+
+               teamA: teams[i].team,
+
+               teamB: teams[j].team,
+
+               winner: "",
+
+               set: [],
+
+               date: matchDate
+
+            })
+
+            currentDate.setDate(
+
+               currentDate.getDate() + 1
 
             )
 
-            item.date =
-            new Date(nextDate)
-
-            await item.save()
-
          }
 
-         res.json({
-
-            message:"Match Rescheduled"
-
-         })
-
       }
 
-      catch(err){
+      // SAVE MATCHES
+      await Match.insertMany(matches)
 
-         console.log(err)
+      res.json({
 
-      }
+         message: "Team Added And Matches Generated"
+
+      })
+
+   }
+
+   catch (err) {
+
+      console.log(err)
+
+   }
 
 })
 
-module.exports = router;
+
+
+
+// GET ALL TEAMS
+
+
+router.get('/teams', async (req, res) => {
+
+   const data = await Team.find()
+  
+
+   res.json(data)
+
+})
+
+
+
+
+// GET SORTED MATCHES
+
+
+router.get('/matches', async(req,res)=>{
+
+   try{
+
+      const data = await Match.find().sort({
+         date: 1
+      })
+
+      res.json(data)
+
+   }
+
+   catch(err){
+
+      console.log(err)
+
+   }
+
+})
+
+
+
+
+// RESCHEDULE MATCH
+
+router.put('/reschedule/:id', async (req, res) => {
+
+   try {
+
+      const { date } = req.body
+
+   
+      const currentMatch = await Match.findById(
+         req.params.id
+      )
+
+   
+      const oldDate = new Date(currentMatch.date)
+
+      
+      const selectedDate = new Date(date)
+
+      selectedDate.setHours(0,0,0,0)
+
+   
+      currentMatch.date = selectedDate
+
+      await currentMatch.save()
+
+
+      const nextMatches = await Match.find({
+
+         date: { $gt: oldDate },
+
+         _id: { $ne: currentMatch._id }
+
+      }).sort({
+
+         date: 1
+
+      })
+
+      
+      let nextDate = new Date(selectedDate)
+
+      
+ for (let item of nextMatches) {
+
+   do {
+
+      nextDate.setDate(
+         nextDate.getDate() + 1
+      )
+
+   } while (
+
+      nextDate.getDay() === 0 ||
+
+      nextDate.getDay() === 6
+
+   )
+
+   item.date = new Date(nextDate)
+
+   await item.save()
+
+}
+
+      res.json({
+
+         message: "Match Rescheduled Successfully"
+
+      })
+
+   }
+
+   catch (err) {
+
+      console.log(err)
+
+   }
+
+})
+
+module.exports = router
