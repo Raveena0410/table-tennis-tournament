@@ -292,50 +292,95 @@ router.get("/matches", async (req, res) => {
   }
 });
 
+
+
 // RESCHEDULE MATCH
 
 router.put("/reschedule/:id", async (req, res) => {
+
   try {
+
     const { date } = req.body;
 
-    const currentMatch = await Match.findById(req.params.id);
+    // FIND CURRENT MATCH
+    const currentMatch = await Match.findById(
+      req.params.id
+    );
 
+    // OLD DATE
     const oldDate = new Date(currentMatch.date);
 
+    oldDate.setHours(0,0,0,0)
+
+    // NEW SELECTED DATE
     const selectedDate = new Date(date);
 
-    selectedDate.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0,0,0,0);
 
+    // UPDATE CURRENT MATCH DATE
     currentMatch.date = selectedDate;
 
     await currentMatch.save();
 
+    // GET NEXT MATCHES
     const nextMatches = await Match.find({
-      date: { $gt: oldDate },
+
+      date: { $gte: oldDate },
 
       _id: { $ne: currentMatch._id },
+
     }).sort({
+
       date: 1,
+
     });
 
+    // START FROM SELECTED DATE
     let nextDate = new Date(selectedDate);
 
+    // UPDATE NEXT MATCHES
     for (let item of nextMatches) {
+
       do {
-        nextDate.setDate(nextDate.getDate() + 1);
-      } while (nextDate.getDay() === 0 || nextDate.getDay() === 6);
+
+        nextDate.setDate(
+          nextDate.getDate() + 1
+        );
+
+      }
+
+      while (
+
+        nextDate.getDay() === 0 ||
+
+        nextDate.getDay() === 6
+
+      );
 
       item.date = new Date(nextDate);
 
+      // REMOVE TIME
+      item.date.setHours(0,0,0,0)
+
       await item.save();
+
     }
 
     res.json({
-      message: "Match Rescheduled Successfully",
+
+      message:
+      "Match Rescheduled Successfully",
+
     });
-  } catch (err) {
-    console.log(err);
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+  }
+
 });
 
 module.exports = router;
