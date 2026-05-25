@@ -296,6 +296,8 @@ router.get("/matches", async (req, res) => {
 
 // RESCHEDULE MATCH
 
+
+
 router.put("/reschedule/:id", async (req, res) => {
 
   try {
@@ -308,17 +310,10 @@ router.put("/reschedule/:id", async (req, res) => {
     );
 
     // OLD DATE
-    const oldDate = new Date(currentMatch.date);
+    const oldDate = currentMatch.date;
 
-    oldDate.setHours(0,0,0,0)
-
-    // NEW SELECTED DATE
-    const selectedDate = new Date(date);
-
-    selectedDate.setHours(0,0,0,0);
-
-    // UPDATE CURRENT MATCH DATE
-    currentMatch.date = selectedDate;
+    // UPDATE CURRENT MATCH
+    currentMatch.date = date;
 
     await currentMatch.save();
 
@@ -336,7 +331,7 @@ router.put("/reschedule/:id", async (req, res) => {
     });
 
     // START FROM SELECTED DATE
-    let nextDate = new Date(selectedDate);
+    let nextDate = new Date(date);
 
     // UPDATE NEXT MATCHES
     for (let item of nextMatches) {
@@ -357,10 +352,17 @@ router.put("/reschedule/:id", async (req, res) => {
 
       );
 
-      item.date = new Date(nextDate);
+      // FORMAT DATE
+      const formattedDate =
+      `${nextDate.getFullYear()}-${
+      String(nextDate.getMonth() + 1)
+      .padStart(2,'0')
+      }-${
+      String(nextDate.getDate())
+      .padStart(2,'0')
+      }`
 
-      // REMOVE TIME
-      item.date.setHours(0,0,0,0)
+      item.date = formattedDate;
 
       await item.save();
 
@@ -382,5 +384,4 @@ router.put("/reschedule/:id", async (req, res) => {
   }
 
 });
-
 module.exports = router;

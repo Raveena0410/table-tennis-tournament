@@ -74,10 +74,7 @@ const TournamentTree = () => {
          // COPY SELECTED DATE
          let newDate = new Date(selectedDate)
 
-         // REMOVE TIME
-         newDate.setHours(0,0,0,0)
-
-         // ADD DIFFERENT DAY FOR EACH MATCH
+         // ADD DAYS
          newDate.setDate(
             newDate.getDate() + index
          )
@@ -97,12 +94,22 @@ const TournamentTree = () => {
 
          }
 
+         // FORMAT DATE
+         const formattedDate =
+         `${newDate.getFullYear()}-${
+         String(newDate.getMonth() + 1)
+         .padStart(2,'0')
+         }-${
+         String(newDate.getDate())
+         .padStart(2,'0')
+         }`
+
          await axios.put(
 
             `https://table-tennis-tournament-five.vercel.app/router/reschedule/${id}`,
 
             {
-               date: newDate.toISOString()
+               date: formattedDate
             }
 
          )
@@ -203,8 +210,7 @@ const TournamentTree = () => {
 
                            ?
 
-                           new Date(item.date)
-                           .toLocaleDateString()
+                           item.date
 
                            :
 
