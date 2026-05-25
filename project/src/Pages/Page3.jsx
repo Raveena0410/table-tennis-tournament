@@ -15,7 +15,13 @@ const Page3 = () => {
             email,
             password
         })
-        navigate('/home')
+        alert(res.data.message)
+
+      if(res.data.message === "register successfully"){
+
+         navigate('/home')
+
+      }
     }
   return (
       <div className='container w-50 mt-5'>
