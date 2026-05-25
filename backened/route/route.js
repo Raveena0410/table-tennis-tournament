@@ -141,6 +141,7 @@ router.get("/lead", async (req, res) => {
 
 router.post("/signup", async (req, res) => {
   try {
+    console.log(req.body)
     const { email, password } = req.body;
 
     const hashpassword = await bcrypt.hash(password, 10);
