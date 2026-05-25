@@ -67,16 +67,34 @@ const TournamentTree = () => {
 
 
    // RESCHEDULE MATCH
-   const rescheduleMatch = async (id) => {
+   const rescheduleMatch = async (id, index) => {
 
       try {
+
+         // CREATE NEW DATE
+         let newDate = new Date(selectedDate)
+
+         // ADD DIFFERENT DAY FOR EACH MATCH
+         newDate.setDate(newDate.getDate() + index)
+
+         // SKIP SATURDAY & SUNDAY
+         while (
+            newDate.getDay() === 0 ||
+            newDate.getDay() === 6
+         ) {
+
+            newDate.setDate(
+               newDate.getDate() + 1
+            )
+
+         }
 
          await axios.put(
 
             `https://table-tennis-tournament-five.vercel.app/router/reschedule/${id}`,
 
             {
-               date: selectedDate
+               date: newDate
             }
 
          )
@@ -145,7 +163,7 @@ const TournamentTree = () => {
 
             {
 
-               matches.map((item) => (
+               matches.map((item, index) => (
 
                   <div
 
@@ -193,7 +211,10 @@ const TournamentTree = () => {
                         className="btn btn-warning"
 
                         onClick={() =>
-                           rescheduleMatch(item._id)
+                           rescheduleMatch(
+                              item._id,
+                              index
+                           )
                         }
 
                      >
