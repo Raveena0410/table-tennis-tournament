@@ -94,7 +94,7 @@ const TournamentTree = () => {
             `https://table-tennis-tournament-five.vercel.app/router/reschedule/${id}`,
 
             {
-               date: newDate
+               date: newDate.toLocaleDateString('en-CA')
             }
 
          )
