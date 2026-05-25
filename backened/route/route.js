@@ -1,520 +1,340 @@
-const express = require('express')
+const express = require("express");
 
-const Match = require('../model/model')
+const Match = require("../model/model");
 
-const Team = require('../model/model1')
+const Team = require("../model/model1");
 
-const Login = require('../model/model2')
+const Login = require("../model/model2");
 
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
 
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
-const router = express.Router()
-
-
+const router = express.Router();
 
 // =====================================
 // ADD MATCH RESULT
 // =====================================
 
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
+  try {
+    await Match.create(req.body);
 
-   try {
+    const { teamA, teamB, set, winner } = req.body;
 
-      await Match.create(req.body)
+    let teamAsetwon = 0;
 
-      const { teamA, teamB, set, winner } = req.body
+    let teamBsetwon = 0;
 
-      let teamAsetwon = 0
+    set.forEach((item) => {
+      if (item.teamA_set > item.teamB_set) {
+        teamAsetwon++;
+      } else {
+        teamBsetwon++;
+      }
+    });
 
-      let teamBsetwon = 0
+    if (winner === teamA) {
+      await Team.findOneAndUpdate(
+        { team: teamA },
 
-      set.forEach((item) => {
+        {
+          $inc: {
+            played: 1,
+            won: 1,
+            score: 2,
+            setwon: teamAsetwon,
+            setlost: teamBsetwon,
+          },
+        },
 
-         if (item.teamA_set > item.teamB_set) {
+        { upsert: true, new: true },
+      );
 
-            teamAsetwon++
+      await Team.findOneAndUpdate(
+        { team: teamB },
 
-         }
+        {
+          $inc: {
+            played: 1,
+            lost: 1,
+            setwon: teamBsetwon,
+            setlost: teamAsetwon,
+          },
+        },
 
-         else {
+        { upsert: true, new: true },
+      );
+    } else {
+      await Team.findOneAndUpdate(
+        { team: teamB },
 
-            teamBsetwon++
+        {
+          $inc: {
+            played: 1,
+            won: 1,
+            score: 2,
+            setwon: teamBsetwon,
+            setlost: teamAsetwon,
+          },
+        },
 
-         }
+        { upsert: true, new: true },
+      );
 
-      })
+      await Team.findOneAndUpdate(
+        { team: teamA },
 
-      if (winner === teamA) {
+        {
+          $inc: {
+            played: 1,
+            lost: 1,
+            setwon: teamAsetwon,
+            setlost: teamBsetwon,
+          },
+        },
 
-         await Team.findOneAndUpdate(
+        { upsert: true, new: true },
+      );
+    }
 
-            { team: teamA },
+    const teams = await Team.find();
 
-            {
-               $inc: {
-                  played: 1,
-                  won: 1,
-                  score: 2,
-                  setwon: teamAsetwon,
-                  setlost: teamBsetwon
-               }
-            },
-
-            { upsert: true, new: true }
-
-         )
-
-         await Team.findOneAndUpdate(
-
-            { team: teamB },
-
-            {
-               $inc: {
-                  played: 1,
-                  lost: 1,
-                  setwon: teamBsetwon,
-                  setlost: teamAsetwon
-               }
-            },
-
-            { upsert: true, new: true }
-
-         )
-
+    for (let item of teams) {
+      if (item.setlost === 0) {
+        item.ratio = item.setwon;
+      } else {
+        item.ratio = item.setwon / item.setlost;
       }
 
-      else {
+      await item.save();
+    }
 
-         await Team.findOneAndUpdate(
-
-            { team: teamB },
-
-            {
-               $inc: {
-                  played: 1,
-                  won: 1,
-                  score: 2,
-                  setwon: teamBsetwon,
-                  setlost: teamAsetwon
-               }
-            },
-
-            { upsert: true, new: true }
-
-         )
-
-         await Team.findOneAndUpdate(
-
-            { team: teamA },
-
-            {
-               $inc: {
-                  played: 1,
-                  lost: 1,
-                  setwon: teamAsetwon,
-                  setlost: teamBsetwon
-               }
-            },
-
-            { upsert: true, new: true }
-
-         )
-
-      }
-
-      const teams = await Team.find()
-
-      for (let item of teams) {
-
-         if (item.setlost === 0) {
-
-            item.ratio = item.setwon
-
-         }
-
-         else {
-
-            item.ratio = item.setwon / item.setlost
-
-         }
-
-         await item.save()
-
-      }
-
-      res.json({
-
-         message: "Data saved successfully"
-
-      })
-
-   }
-
-   catch (err) {
-
-      console.log(err)
-
-   }
-
-})
-
-
+    res.json({
+      message: "Data saved successfully",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // =====================================
 // LEADERBOARD
 // =====================================
 
-router.get('/lead', async (req, res) => {
+router.get("/lead", async (req, res) => {
+  try {
+    const t = await Team.find().sort({
+      score: -1,
+      ratio: -1,
+    });
 
-   try {
-
-      const t = await Team.find().sort({
-
-         score: -1,
-         ratio: -1
-
-      })
-
-      res.json(t)
-
-   }
-
-   catch (err) {
-
-      console.log(err)
-
-   }
-
-})
-
-
+    res.json(t);
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // =====================================
 // SIGNUP
 // =====================================
 
-router.post('/signup', async (req, res) => {
+router.post("/signup", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-   try {
+    const hashpassword = await bcrypt.hash(password, 10);
 
-      const { email, password } = req.body
+    const user = new Login({
+      email,
+      password: hashpassword,
+    });
 
-      const hashpassword = await bcrypt.hash(password, 10)
+    await user.save();
 
-      const user = new Login({
-
-         email,
-         password: hashpassword
-
-      })
-
-      await user.save()
-
-      res.json({
-
-         message: "register successfully"
-
-      })
-
-   }
-
-   catch (err) {
-
-      res.json({
-
-         message: "user is not registered"
-
-      })
-
-   }
-
-})
-
-
+    res.json({
+      message: "register successfully",
+    });
+  } catch (err) {
+    res.json({
+      message: "user is not registered",
+    });
+  }
+});
 
 // =====================================
 // LOGIN
 // =====================================
 
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-   try {
+    const user = await Login.findOne({
+      email,
+    });
 
-      const { email, password } = req.body
+    if (!user) {
+      return res.json({
+        message: "user is not found",
+      });
+    }
 
-      const user = await Login.findOne({
+    const match = await bcrypt.compare(password, user.password);
 
-         email
+    if (!match) {
+      return res.json({
+        message: "incorrect password",
+      });
+    }
 
-      })
+    const token = jwt.sign(
+      { userId: user._id },
 
-      if (!user) {
+      "secret-",
 
-         return res.json({
+      { expiresIn: "1h" },
+    );
+    res.json({
+      message: "login successfully",
+      token,
+    });
 
-            message: "user is not found"
-
-         })
-
-      }
-
-      const match = await bcrypt.compare(
-
-         password,
-         user.password
-
-      )
-
-      if (!match) {
-
-         return res.json({
-
-            message: "incorrect password"
-
-         })
-
-      }
-
-      const token = jwt.sign(
-
-         { userId: user._id },
-
-         "secret-",
-
-         { expiresIn: "1h" }
-
-      )
-
-      res.json({ token })
-
-   }
-
-   catch (err) {
-
-      console.log(err)
-
-   }
-
-})
-
-
-
+    
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // GET ALL MATCHES
 
+router.get("/", async (req, res) => {
+  const p = await Match.find();
 
-router.get('/', async (req, res) => {
-
-   const p = await Match.find()
-
-   res.json(p)
-
-})
-
-
-
+  res.json(p);
+});
 
 // ADD TEAM + GENERATE MATCHES
 
+router.post("/addteam", async (req, res) => {
+  try {
+    const newTeam = new Team(req.body);
 
-router.post('/addteam', async (req, res) => {
+    await newTeam.save();
 
-   try {
+    // DELETE OLD MATCHES
+    await Match.deleteMany();
 
-      const newTeam = new Team(req.body)
+    // GET ALL TEAMS
+    const teams = await Team.find().sort({
+      team: 1,
+    });
 
-      await newTeam.save()
+    let matches = [];
 
-      // DELETE OLD MATCHES
-      await Match.deleteMany()
+    let currentDate = new Date();
 
-      // GET ALL TEAMS
-      const teams = await Team.find().sort({
-         team:1
-      })
+    currentDate.setHours(0, 0, 0, 0);
 
-      let matches = []
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        const matchDate = new Date(currentDate);
 
-      let currentDate = new Date()
+        matchDate.setHours(0, 0, 0, 0);
 
-      currentDate.setHours(0,0,0,0)
+        matches.push({
+          teamA: teams[i].team,
 
-      for (let i = 0; i < teams.length; i++) {
+          teamB: teams[j].team,
 
-         for (let j = i + 1; j < teams.length; j++) {
+          winner: "",
 
-            const matchDate = new Date(currentDate)
+          set: [],
 
-            matchDate.setHours(0,0,0,0)
+          date: matchDate,
+        });
 
-            matches.push({
-
-               teamA: teams[i].team,
-
-               teamB: teams[j].team,
-
-               winner: "",
-
-               set: [],
-
-               date: matchDate
-
-            })
-
-            currentDate.setDate(
-
-               currentDate.getDate() + 1
-
-            )
-
-         }
-
+        currentDate.setDate(currentDate.getDate() + 1);
       }
+    }
 
-      // SAVE MATCHES
-      await Match.insertMany(matches)
+    // SAVE MATCHES
+    await Match.insertMany(matches);
 
-      res.json({
-
-         message: "Team Added And Matches Generated"
-
-      })
-
-   }
-
-   catch (err) {
-
-      console.log(err)
-
-   }
-
-})
-
-
-
+    res.json({
+      message: "Team Added And Matches Generated",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // GET ALL TEAMS
 
+router.get("/teams", async (req, res) => {
+  const data = await Team.find();
 
-router.get('/teams', async (req, res) => {
-
-   const data = await Team.find()
-  
-
-   res.json(data)
-
-})
-
-
-
+  res.json(data);
+});
 
 // GET SORTED MATCHES
 
+router.get("/matches", async (req, res) => {
+  try {
+    const data = await Match.find().sort({
+      date: 1,
+    });
 
-router.get('/matches', async(req,res)=>{
-
-   try{
-
-      const data = await Match.find().sort({
-         date: 1
-      })
-
-      res.json(data)
-
-   }
-
-   catch(err){
-
-      console.log(err)
-
-   }
-
-})
-
-
-
+    res.json(data);
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // RESCHEDULE MATCH
 
-router.put('/reschedule/:id', async (req, res) => {
+router.put("/reschedule/:id", async (req, res) => {
+  try {
+    const { date } = req.body;
 
-   try {
+    const currentMatch = await Match.findById(req.params.id);
 
-      const { date } = req.body
+    const oldDate = new Date(currentMatch.date);
 
-   
-      const currentMatch = await Match.findById(
-         req.params.id
-      )
+    const selectedDate = new Date(date);
 
-   
-      const oldDate = new Date(currentMatch.date)
+    selectedDate.setHours(0, 0, 0, 0);
 
-      
-      const selectedDate = new Date(date)
+    currentMatch.date = selectedDate;
 
-      selectedDate.setHours(0,0,0,0)
+    await currentMatch.save();
 
-   
-      currentMatch.date = selectedDate
+    const nextMatches = await Match.find({
+      date: { $gt: oldDate },
 
-      await currentMatch.save()
+      _id: { $ne: currentMatch._id },
+    }).sort({
+      date: 1,
+    });
 
+    let nextDate = new Date(selectedDate);
 
-      const nextMatches = await Match.find({
+    for (let item of nextMatches) {
+      do {
+        nextDate.setDate(nextDate.getDate() + 1);
+      } while (nextDate.getDay() === 0 || nextDate.getDay() === 6);
 
-         date: { $gt: oldDate },
+      item.date = new Date(nextDate);
 
-         _id: { $ne: currentMatch._id }
+      await item.save();
+    }
 
-      }).sort({
+    res.json({
+      message: "Match Rescheduled Successfully",
+    });
+  } catch (err) {
+    console.log(err);
+  }
+});
 
-         date: 1
-
-      })
-
-      
-      let nextDate = new Date(selectedDate)
-
-      
- for (let item of nextMatches) {
-
-   do {
-
-      nextDate.setDate(
-         nextDate.getDate() + 1
-      )
-
-   } while (
-
-      nextDate.getDay() === 0 ||
-
-      nextDate.getDay() === 6
-
-   )
-
-   item.date = new Date(nextDate)
-
-   await item.save()
-
-}
-
-      res.json({
-
-         message: "Match Rescheduled Successfully"
-
-      })
-
-   }
-
-   catch (err) {
-
-      console.log(err)
-
-   }
-
-})
-
-module.exports = router
+module.exports = router;
