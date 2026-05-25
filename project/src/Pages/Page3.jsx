@@ -10,7 +10,7 @@ const Page3 = () => {
     const[password,setpassword]=useState("")
      const navigate = useNavigate()
     const signed=async function(){
-        await axios.post('http://localhost:3000/router/signup',{
+        await axios.post('https://table-tennis-tournament-teal.vercel.app/router/signup',{
             email,
             password
         })
