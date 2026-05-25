@@ -10,7 +10,9 @@ const Page4 = () => {
 
     const navigate = useNavigate()
 
-    const login = async () => {
+    const login = async (e) => {
+        e.preventDefault()
+        
 
         try {
 
@@ -21,13 +23,21 @@ const Page4 = () => {
                     password
                 }
             )
-
-            console.log(res.data)
+            if(res.data.token){
 
             alert("Login Successful")
 
             navigate('/teamform')
 
+        }
+
+        else{
+
+            alert(res.data.message)
+
+        }
+
+            
         }
 
         catch (err) {
