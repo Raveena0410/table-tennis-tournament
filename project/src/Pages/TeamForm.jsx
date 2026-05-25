@@ -23,7 +23,7 @@ const TeamForm = () => {
         e.preventDefault()
 
         await axios.post(
-            "https://table-tennis-tournament-teal.vercel.app/router/addteam",
+            "https://table-tennis-tournament-five.vercel.app/router/addteam",
             formData
         )
 

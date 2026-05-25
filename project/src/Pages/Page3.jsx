@@ -11,7 +11,7 @@ const Page3 = () => {
      const navigate = useNavigate()
     const signed=async function(e){
           e.preventDefault()
-        const res=await axios.post('https://table-tennis-tournament-teal.vercel.app/router/signup',{
+        const res=await axios.post('https://table-tennis-tournament-five.vercel.app/router/signup',{
             email,
             password
         })

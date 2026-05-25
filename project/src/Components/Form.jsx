@@ -23,7 +23,7 @@ const Form = () => {
     try {
 
       const res = await axios.get(
-        "https://table-tennis-tournament-teal.vercel.app/router/teams"
+        "https://table-tennis-tournament-five.vercel.app/router/teams"
       )
 
       setteam(res.data)
@@ -83,7 +83,7 @@ const Form = () => {
     try {
 
       await axios.post(
-        "https://table-tennis-tournament-teal.vercel.app/router",
+        "https://table-tennis-tournament-five.vercel.app/router",
         {
 
           teamA,
