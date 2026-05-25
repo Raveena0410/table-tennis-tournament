@@ -9,7 +9,8 @@ const Page3 = () => {
     const[email,setemail]=useState("")
     const[password,setpassword]=useState("")
      const navigate = useNavigate()
-    const signed=async function(){
+    const signed=async function(e){
+          e.preventDefault()
         await axios.post('https://table-tennis-tournament-teal.vercel.app/router/signup',{
             email,
             password
@@ -35,7 +36,7 @@ const Page3 = () => {
              
         </div>
       </form>
-      <button className='btn btn-info mb-3' onClick={signed}>Register</button>
+      <button className='btn btn-info mb-3'  type="button" onClick={signed}>Register</button>
       
       <p className='text-center text-light mt-3'>
          Already Have Account?<Link to="/">
