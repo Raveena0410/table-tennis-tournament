@@ -9,7 +9,23 @@ const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
+router.get('/match', async(req,res)=>{
 
+   try{
+
+      const data = await Match.find()
+
+      res.json(data)
+
+   }
+
+   catch(err){
+
+      res.status(500).json({message:err.message})
+
+   }
+
+})
 
 // =====================================
 // UPDATE MATCH RESULT
