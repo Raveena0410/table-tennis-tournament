@@ -14,7 +14,6 @@ const router = express.Router();
 // =====================================
 // UPDATE MATCH RESULT
 // =====================================
-// =====================================
 // UPDATE MATCH RESULT
 // =====================================
 
@@ -22,7 +21,21 @@ router.post("/", async (req, res) => {
 
   try {
 
-    const { teamA, teamB, set, winner } = req.body;
+    const {
+
+      teamA,
+      teamB,
+      set,
+      winner
+
+    } = req.body;
+
+    // =====================================
+    // REMOVE EXTRA SPACES
+    // =====================================
+
+    const teamAName = teamA.trim();
+    const teamBName = teamB.trim();
 
     // =====================================
     // FIND EXISTING MATCH
@@ -31,10 +44,29 @@ router.post("/", async (req, res) => {
     const existingMatch =
     await Match.findOne({
 
-      teamA,
-      teamB
+      $or: [
+
+        {
+
+          teamA: teamAName,
+          teamB: teamBName
+
+        },
+
+        {
+
+          teamA: teamBName,
+          teamB: teamAName
+
+        }
+
+      ]
 
     });
+
+    // =====================================
+    // MATCH NOT FOUND
+    // =====================================
 
     if (!existingMatch) {
 
@@ -56,150 +88,181 @@ router.post("/", async (req, res) => {
     await existingMatch.save();
 
     // =====================================
-    // COUNT SETS
+    // RESET ALL TEAM STATS
     // =====================================
 
-    let teamAsetwon = 0;
-    let teamBsetwon = 0;
+    await Team.updateMany(
 
-    set.forEach((item) => {
+      {},
 
-      if (
-        item.teamA_set >
-        item.teamB_set
-      ) {
+      {
 
-        teamAsetwon++;
+        $set: {
+
+          played: 0,
+          won: 0,
+          lost: 0,
+          score: 0,
+          setwon: 0,
+          setlost: 0,
+          ratio: 0
+
+        }
 
       }
 
-      else {
+    );
 
-        teamBsetwon++;
+    // =====================================
+    // GET ALL COMPLETED MATCHES
+    // =====================================
+
+    const completedMatches =
+    await Match.find({
+
+      winner: {
+
+        $ne: ""
 
       }
 
     });
 
     // =====================================
-    // TEAM A WON
+    // RECALCULATE LEADERBOARD
     // =====================================
 
-    if (winner === teamA) {
+    for (let match of completedMatches) {
 
-      await Team.findOneAndUpdate(
+      let teamAsetwon = 0;
+      let teamBsetwon = 0;
 
-        { team: teamA },
+      // =====================================
+      // COUNT SETS
+      // =====================================
 
-        {
+      match.set.forEach((item) => {
 
-          $inc: {
+        if (
 
-            played: 1,
-            won: 1,
-            score: 2,
-            setwon: teamAsetwon,
-            setlost: teamBsetwon,
+          Number(item.teamA_set) >
+          Number(item.teamB_set)
 
-          }
+        ) {
+
+          teamAsetwon++;
 
         }
 
-      );
+        else {
 
-      await Team.findOneAndUpdate(
-
-        { team: teamB },
-
-        {
-
-          $inc: {
-
-            played: 1,
-            lost: 1,
-            setwon: teamBsetwon,
-            setlost: teamAsetwon,
-
-          }
+          teamBsetwon++;
 
         }
 
-      );
+      });
 
-    }
+      // =====================================
+      // GET TEAM DATA
+      // =====================================
 
-    // =====================================
-    // TEAM B WON
-    // =====================================
+      const teamAData =
+      await Team.findOne({
 
-    else if (winner === teamB) {
+        team: match.teamA
 
-      await Team.findOneAndUpdate(
+      });
 
-        { team: teamB },
+      const teamBData =
+      await Team.findOne({
 
-        {
+        team: match.teamB
 
-          $inc: {
+      });
 
-            played: 1,
-            won: 1,
-            score: 2,
-            setwon: teamBsetwon,
-            setlost: teamAsetwon,
+      // =====================================
+      // PLAYED
+      // =====================================
 
-          }
+      teamAData.played += 1;
+      teamBData.played += 1;
 
-        }
+      // =====================================
+      // SETS
+      // =====================================
 
-      );
+      teamAData.setwon += teamAsetwon;
+      teamAData.setlost += teamBsetwon;
 
-      await Team.findOneAndUpdate(
+      teamBData.setwon += teamBsetwon;
+      teamBData.setlost += teamAsetwon;
 
-        { team: teamA },
+      // =====================================
+      // WIN / LOSS
+      // =====================================
 
-        {
+      if (match.winner === match.teamA) {
 
-          $inc: {
+        teamAData.won += 1;
+        teamAData.score += 2;
 
-            played: 1,
-            lost: 1,
-            setwon: teamAsetwon,
-            setlost: teamBsetwon,
-
-          }
-
-        }
-
-      );
-
-    }
-
-    // =====================================
-    // UPDATE RATIOS
-    // =====================================
-
-    const teams = await Team.find();
-
-    for (let item of teams) {
-
-      if (item.setlost === 0) {
-
-        item.ratio = item.setwon;
+        teamBData.lost += 1;
 
       }
 
       else {
 
-        item.ratio =
+        teamBData.won += 1;
+        teamBData.score += 2;
+
+        teamAData.lost += 1;
+
+      }
+
+      // =====================================
+      // RATIO
+      // =====================================
+
+      if (teamAData.setlost === 0) {
+
+        teamAData.ratio =
+        teamAData.setwon;
+
+      }
+
+      else {
+
+        teamAData.ratio =
         (
-          item.setwon /
-          item.setlost
+          teamAData.setwon /
+          teamAData.setlost
         ).toFixed(1);
 
       }
 
-      await item.save();
+      if (teamBData.setlost === 0) {
+
+        teamBData.ratio =
+        teamBData.setwon;
+
+      }
+
+      else {
+
+        teamBData.ratio =
+        (
+          teamBData.setwon /
+          teamBData.setlost
+        ).toFixed(1);
+
+      }
+
+      // =====================================
+      // SAVE
+      // =====================================
+
+      await teamAData.save();
+      await teamBData.save();
 
     }
 
@@ -228,9 +291,6 @@ router.post("/", async (req, res) => {
 });
 
 
-// =====================================
-// LEADERBOARD
-// =====================================
 // =====================================
 // LEADERBOARD
 // =====================================
