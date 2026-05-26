@@ -215,127 +215,54 @@ router.get("/", async (req, res) => {
 });
 
 // ADD TEAM + GENERATE MATCHES
-
-router.post("/addteam", async (req, res) => {
-  try {
-    const newTeam = new Team(req.body);
-
-    await newTeam.save();
-
-    // DELETE OLD MATCHES
-    await Match.deleteMany();
-
-    // GET ALL TEAMS
-    const teams = await Team.find().sort({
-      team: 1,
-    });
-
-    let matches = [];
-
-    let currentDate = new Date();
-
-    currentDate.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < teams.length; i++) {
-      for (let j = i + 1; j < teams.length; j++) {
-        const matchDate = new Date(currentDate);
-
-        matchDate.setHours(0, 0, 0, 0);
-
-        matches.push({
-          teamA: teams[i].team,
-
-          teamB: teams[j].team,
-
-          winner: "",
-
-          set: [],
-
-          date: matchDate,
-        });
-
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-    }
-
-    // SAVE MATCHES
-    await Match.insertMany(matches);
-
-    res.json({
-      message: "Team Added And Matches Generated",
-    });
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-// GET ALL TEAMS
-
-router.get("/teams", async (req, res) => {
-  const data = await Team.find();
-
-  res.json(data);
-});
-
-// GET SORTED MATCHES
-
-router.get("/matches", async (req, res) => {
-  try {
-    const data = await Match.find().sort({
-      date: 1,
-    });
-
-    res.json(data);
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-
-
-// RESCHEDULE MATCH
-
-
-
 router.put("/reschedule/:id", async (req, res) => {
 
   try {
 
     const { date } = req.body;
 
-    // FIND CURRENT MATCH
-    const currentMatch = await Match.findById(
-      req.params.id
-    );
-
-    // OLD DATE
-    const oldDate = currentMatch.date;
-
-    // UPDATE CURRENT MATCH
-    currentMatch.date = date;
-
-    await currentMatch.save();
-
-    // GET NEXT MATCHES
-    const nextMatches = await Match.find({
-
-      date: { $gte: oldDate },
-
-      _id: { $ne: currentMatch._id },
-
-    }).sort({
-
-      date: 1,
-
+    // GET ALL MATCHES SORTED
+    const matches = await Match.find().sort({
+      date: 1
     });
 
-    // START FROM SELECTED DATE
+    // FIND CURRENT MATCH INDEX
+    const currentIndex = matches.findIndex(
+      item => item._id.toString() === req.params.id
+    );
+
+    if (currentIndex === -1) {
+
+      return res.json({
+        message: "Match not found"
+      });
+
+    }
+
+    // START DATE
     let nextDate = new Date(date);
 
-    // UPDATE NEXT MATCHES
-    for (let item of nextMatches) {
+    nextDate.setHours(0,0,0,0);
 
-      do {
+    // UPDATE CURRENT + NEXT MATCHES
+    for (
+
+      let i = currentIndex;
+
+      i < matches.length;
+
+      i++
+
+    ) {
+
+      // SKIP WEEKENDS
+      while (
+
+        nextDate.getDay() === 0 ||
+
+        nextDate.getDay() === 6
+
+      ) {
 
         nextDate.setDate(
           nextDate.getDate() + 1
@@ -343,34 +270,22 @@ router.put("/reschedule/:id", async (req, res) => {
 
       }
 
-      while (
+      // SAVE DATE
+      matches[i].date = new Date(nextDate);
 
-        nextDate.getDay() === 0 ||
+      await matches[i].save();
 
-        nextDate.getDay() === 6
-
+      // NEXT DAY
+      nextDate.setDate(
+        nextDate.getDate() + 1
       );
-
-      // FORMAT DATE
-      const formattedDate =
-      `${nextDate.getFullYear()}-${
-      String(nextDate.getMonth() + 1)
-      .padStart(2,'0')
-      }-${
-      String(nextDate.getDate())
-      .padStart(2,'0')
-      }`
-
-      item.date = formattedDate;
-
-      await item.save();
 
     }
 
     res.json({
 
       message:
-      "Match Rescheduled Successfully",
+      "Matches Rescheduled Successfully"
 
     });
 
