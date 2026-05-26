@@ -1,13 +1,10 @@
 const express = require("express");
 
 const Match = require("../model/model");
-
 const Team = require("../model/model1");
-
 const Login = require("../model/model2");
 
 const bcrypt = require("bcrypt");
-
 const jwt = require("jsonwebtoken");
 
 const router = express.Router();
@@ -15,38 +12,68 @@ const router = express.Router();
 
 
 // =====================================
-// ADD MATCH RESULT
+// UPDATE MATCH RESULT
 // =====================================
 
-router.post("/", async (req, res) => {
+router.put("/:id", async (req, res) => {
 
   try {
 
-    await Match.create(req.body);
-
     const { teamA, teamB, set, winner } = req.body;
 
-    // ============================
-    // STOP IF MATCH NOT COMPLETED
-    // ============================
+    // =====================================
+    // FIND MATCH
+    // =====================================
 
-    if (!winner || winner.trim() === "") {
+    const existingMatch = await Match.findById(
+      req.params.id
+    );
+
+    if (!existingMatch) {
 
       return res.json({
-
-        message: "Match not completed yet"
-
+        message: "Match not found"
       });
 
     }
 
-    let teamAsetwon = 0;
+    // =====================================
+    // PREVENT DUPLICATE RESULT
+    // =====================================
 
+    if (
+      existingMatch.winner &&
+      existingMatch.winner.trim() !== ""
+    ) {
+
+      return res.json({
+        message: "Result already added"
+      });
+
+    }
+
+    // =====================================
+    // UPDATE MATCH
+    // =====================================
+
+    existingMatch.set = set;
+    existingMatch.winner = winner;
+
+    await existingMatch.save();
+
+    // =====================================
+    // COUNT SETS
+    // =====================================
+
+    let teamAsetwon = 0;
     let teamBsetwon = 0;
 
     set.forEach((item) => {
 
-      if (item.teamA_set > item.teamB_set) {
+      if (
+        item.teamA_set >
+        item.teamB_set
+      ) {
 
         teamAsetwon++;
 
@@ -60,9 +87,9 @@ router.post("/", async (req, res) => {
 
     });
 
-    // ============================
+    // =====================================
     // TEAM A WON
-    // ============================
+    // =====================================
 
     if (winner === teamA) {
 
@@ -80,11 +107,9 @@ router.post("/", async (req, res) => {
             setwon: teamAsetwon,
             setlost: teamBsetwon,
 
-          },
+          }
 
-        },
-
-        { upsert: true, new: true }
+        }
 
       );
 
@@ -101,19 +126,17 @@ router.post("/", async (req, res) => {
             setwon: teamBsetwon,
             setlost: teamAsetwon,
 
-          },
+          }
 
-        },
-
-        { upsert: true, new: true }
+        }
 
       );
 
     }
 
-    // ============================
+    // =====================================
     // TEAM B WON
-    // ============================
+    // =====================================
 
     else if (winner === teamB) {
 
@@ -131,11 +154,9 @@ router.post("/", async (req, res) => {
             setwon: teamBsetwon,
             setlost: teamAsetwon,
 
-          },
+          }
 
-        },
-
-        { upsert: true, new: true }
+        }
 
       );
 
@@ -152,19 +173,17 @@ router.post("/", async (req, res) => {
             setwon: teamAsetwon,
             setlost: teamBsetwon,
 
-          },
+          }
 
-        },
-
-        { upsert: true, new: true }
+        }
 
       );
 
     }
 
-    // ============================
+    // =====================================
     // UPDATE RATIOS
-    // ============================
+    // =====================================
 
     const teams = await Team.find();
 
@@ -179,7 +198,10 @@ router.post("/", async (req, res) => {
       else {
 
         item.ratio =
-        (item.setwon / item.setlost).toFixed(1);
+        (
+          item.setwon /
+          item.setlost
+        ).toFixed(1);
 
       }
 
@@ -189,7 +211,8 @@ router.post("/", async (req, res) => {
 
     res.json({
 
-      message: "Data saved successfully",
+      message:
+      "Result Updated Successfully"
 
     });
 
@@ -198,6 +221,13 @@ router.post("/", async (req, res) => {
   catch (err) {
 
     console.log(err);
+
+    res.json({
+
+      message:
+      "Something went wrong"
+
+    });
 
   }
 
@@ -371,14 +401,68 @@ router.post("/addteam", async (req, res) => {
 
   try {
 
+    // =====================================
+    // CHECK DUPLICATE TEAM
+    // =====================================
+
+    const existingTeam =
+    await Team.findOne({
+
+      team: req.body.team
+
+    });
+
+    if (existingTeam) {
+
+      return res.json({
+
+        message:
+        "Team already exists"
+
+      });
+
+    }
+
     const newTeam = new Team(req.body);
 
     await newTeam.save();
 
+    // =====================================
     // DELETE OLD MATCHES
+    // =====================================
+
     await Match.deleteMany();
 
+    // =====================================
+    // RESET TEAM STATS
+    // =====================================
+
+    await Team.updateMany(
+
+      {},
+
+      {
+
+        $set: {
+
+          played: 0,
+          won: 0,
+          lost: 0,
+          score: 0,
+          setwon: 0,
+          setlost: 0,
+          ratio: 0
+
+        }
+
+      }
+
+    );
+
+    // =====================================
     // GET ALL TEAMS
+    // =====================================
+
     const teams = await Team.find().sort({
 
       team: 1,
@@ -393,14 +477,14 @@ router.post("/addteam", async (req, res) => {
 
       for (let j = i + 1; j < teams.length; j++) {
 
-        // STORE ONLY DATE
         const formattedDate =
+
         `${currentDate.getFullYear()}-${
         String(currentDate.getMonth() + 1)
-        .padStart(2,'0')
+        .padStart(2, '0')
         }-${
         String(currentDate.getDate())
-        .padStart(2,'0')
+        .padStart(2, '0')
         }`
 
         matches.push({
@@ -414,14 +498,19 @@ router.post("/addteam", async (req, res) => {
         });
 
         currentDate.setDate(
+
           currentDate.getDate() + 1
+
         );
 
       }
 
     }
 
+    // =====================================
     // SAVE MATCHES
+    // =====================================
+
     await Match.insertMany(matches);
 
     res.json({
@@ -495,14 +584,20 @@ router.put("/reschedule/:id", async (req, res) => {
 
     const { date } = req.body;
 
-    // GET ALL MATCHES
+    // =====================================
+    // GET ALL MATCHES SORTED
+    // =====================================
+
     const matches = await Match.find().sort({
 
       date: 1
 
     });
 
+    // =====================================
     // FIND CURRENT MATCH
+    // =====================================
+
     const currentIndex = matches.findIndex(
 
       item =>
@@ -520,10 +615,16 @@ router.put("/reschedule/:id", async (req, res) => {
 
     }
 
+    // =====================================
     // START DATE
+    // =====================================
+
     let nextDate = new Date(date);
 
-    // UPDATE ALL NEXT MATCHES
+    // =====================================
+    // UPDATE MATCHES
+    // =====================================
+
     for (
 
       let i = currentIndex;
@@ -534,36 +635,91 @@ router.put("/reschedule/:id", async (req, res) => {
 
     ) {
 
-      // SKIP WEEKENDS
-      while (
+      let uniqueDateFound = false;
 
-        nextDate.getDay() === 0 ||
+      while (!uniqueDateFound) {
 
-        nextDate.getDay() === 6
+        // =====================================
+        // SKIP WEEKENDS
+        // =====================================
 
-      ) {
+        while (
 
-        nextDate.setDate(
-          nextDate.getDate() + 1
-        );
+          nextDate.getDay() === 0 ||
+
+          nextDate.getDay() === 6
+
+        ) {
+
+          nextDate.setDate(
+            nextDate.getDate() + 1
+          );
+
+        }
+
+        // =====================================
+        // FORMAT DATE
+        // =====================================
+
+        const formattedDate =
+
+        `${nextDate.getFullYear()}-${
+        String(nextDate.getMonth() + 1)
+        .padStart(2, '0')
+        }-${
+        String(nextDate.getDate())
+        .padStart(2, '0')
+        }`;
+
+        // =====================================
+        // CHECK DUPLICATE DATE
+        // =====================================
+
+        const existingMatch =
+        await Match.findOne({
+
+          date: formattedDate,
+
+          _id: {
+
+            $ne: matches[i]._id
+
+          }
+
+        });
+
+        // =====================================
+        // IF DATE FREE
+        // =====================================
+
+        if (!existingMatch) {
+
+          matches[i].date = formattedDate;
+
+          await matches[i].save();
+
+          uniqueDateFound = true;
+
+        }
+
+        // =====================================
+        // IF DATE EXISTS
+        // =====================================
+
+        else {
+
+          nextDate.setDate(
+            nextDate.getDate() + 1
+          );
+
+        }
 
       }
 
-      // STORE ONLY DATE
-      const formattedDate =
-      `${nextDate.getFullYear()}-${
-      String(nextDate.getMonth() + 1)
-      .padStart(2,'0')
-      }-${
-      String(nextDate.getDate())
-      .padStart(2,'0')
-      }`
-
-      matches[i].date = formattedDate;
-
-      await matches[i].save();
-
+      // =====================================
       // NEXT DAY
+      // =====================================
+
       nextDate.setDate(
         nextDate.getDate() + 1
       );
@@ -582,6 +738,13 @@ router.put("/reschedule/:id", async (req, res) => {
   catch (err) {
 
     console.log(err);
+
+    res.json({
+
+      message:
+      "Something went wrong"
+
+    });
 
   }
 
