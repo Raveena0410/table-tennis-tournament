@@ -43,9 +43,11 @@ const TournamentTree = () => {
 
    // RESCHEDULE MATCH
 
-   const rescheduleMatch = async (id, index) => {
+   const rescheduleMatch = async (id) => {
 
       try {
+
+         // SELECTED DATE ONLY
 
          let newDate = new Date(
 
@@ -56,30 +58,6 @@ const TournamentTree = () => {
             selectedDate.getDate()
 
          )
-
-
-         // ADD DAYS
-
-         newDate.setDate(
-            newDate.getDate() + index
-         )
-
-
-         // SKIP WEEKENDS
-
-         while (
-
-            newDate.getDay() === 0 ||
-
-            newDate.getDay() === 6
-
-         ) {
-
-            newDate.setDate(
-               newDate.getDate() + 1
-            )
-
-         }
 
 
          // STORE ONLY DATE
@@ -182,7 +160,7 @@ const TournamentTree = () => {
 
             {
 
-               matches.map((item, index) => (
+               matches.map((item) => (
 
                   <div
 
@@ -233,8 +211,7 @@ const TournamentTree = () => {
 
                         onClick={() =>
                            rescheduleMatch(
-                              item._id,
-                              index
+                              item._id
                            )
                         }
 
