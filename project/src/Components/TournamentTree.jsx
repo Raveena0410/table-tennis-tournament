@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Calendar from 'react-calendar'
 import 'react-calendar/dist/Calendar.css'
+import './TT.css'
 
 const TournamentTree = () => {
 
@@ -71,15 +72,23 @@ const TournamentTree = () => {
 
       try {
 
-         // COPY SELECTED DATE
-         let newDate = new Date(selectedDate)
+         // LOCAL DATE FIX
+         let newDate = new Date(
+
+            selectedDate.getFullYear(),
+
+            selectedDate.getMonth(),
+
+            selectedDate.getDate()
+
+         )
 
          // ADD DAYS
          newDate.setDate(
             newDate.getDate() + index
          )
 
-         // SKIP SATURDAY & SUNDAY
+         // SKIP WEEKENDS
          while (
 
             newDate.getDay() === 0 ||
@@ -94,15 +103,9 @@ const TournamentTree = () => {
 
          }
 
-         // FORMAT DATE
+         // SEND ISO DATE
          const formattedDate =
-         `${newDate.getFullYear()}-${
-         String(newDate.getMonth() + 1)
-         .padStart(2,'0')
-         }-${
-         String(newDate.getDate())
-         .padStart(2,'0')
-         }`
+         newDate.toISOString()
 
          await axios.put(
 
@@ -148,6 +151,12 @@ const TournamentTree = () => {
                onChange={setSelectedDate}
 
                value={selectedDate}
+
+               minDate={new Date()}
+
+               formatDay={(locale, date) =>
+                  date.getDate()
+               }
 
                tileDisabled={({ date }) => {
 
@@ -210,7 +219,22 @@ const TournamentTree = () => {
 
                            ?
 
-                           item.date
+                           new Date(item.date)
+                           .toLocaleDateString(
+
+                              "en-IN",
+
+                              {
+
+                                 day: "2-digit",
+
+                                 month: "long",
+
+                                 year: "numeric"
+
+                              }
+
+                           )
 
                            :
 
