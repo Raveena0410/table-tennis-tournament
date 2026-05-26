@@ -12,7 +12,7 @@ const Matches = () => {
     try {
 
       const res = await axios.get(
-        "https://table-tennis-tournament-five.vercel.app/router"
+        "http://localhost:3000/router"
       )
 
       setMatches(res.data)
@@ -33,7 +33,7 @@ const Matches = () => {
     try {
 
       const res = await axios.get(
-        "https://table-tennis-tournament-five.vercel.app/router/teams"
+        "http://localhost:3000/router/teams"
       )
 
       setteams(res.data)

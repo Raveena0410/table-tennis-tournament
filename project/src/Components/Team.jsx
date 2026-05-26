@@ -9,7 +9,7 @@ const Team = () => {
     const fetchTeams = async() => {
 
         const res = await axios.get(
-            "https://table-tennis-tournament-five.vercel.app/router/teams"
+            "http://localhost:3000/router/teams"
         )
 
         setTeams(res.data)
