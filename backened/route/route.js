@@ -14,40 +14,34 @@ const router = express.Router();
 // =====================================
 // UPDATE MATCH RESULT
 // =====================================
+// =====================================
+// UPDATE MATCH RESULT
+// =====================================
 
-router.put("/:id", async (req, res) => {
+router.post("/", async (req, res) => {
 
   try {
 
     const { teamA, teamB, set, winner } = req.body;
 
     // =====================================
-    // FIND MATCH
+    // FIND EXISTING MATCH
     // =====================================
 
-    const existingMatch = await Match.findById(
-      req.params.id
-    );
+    const existingMatch =
+    await Match.findOne({
+
+      teamA,
+      teamB
+
+    });
 
     if (!existingMatch) {
 
       return res.json({
+
         message: "Match not found"
-      });
 
-    }
-
-    // =====================================
-    // PREVENT DUPLICATE RESULT
-    // =====================================
-
-    if (
-      existingMatch.winner &&
-      existingMatch.winner.trim() !== ""
-    ) {
-
-      return res.json({
-        message: "Result already added"
       });
 
     }
@@ -212,7 +206,7 @@ router.put("/:id", async (req, res) => {
     res.json({
 
       message:
-      "Result Updated Successfully"
+      "Match Updated Successfully"
 
     });
 
@@ -232,7 +226,6 @@ router.put("/:id", async (req, res) => {
   }
 
 });
-
 
 
 // =====================================
