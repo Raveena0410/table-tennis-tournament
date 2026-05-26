@@ -138,95 +138,18 @@ router.get("/lead", async (req, res) => {
 
 // SIGNUP
 
-router.post("/signup", async (req, res) => {
-  try {
-    console.log(req.body)
-    const { email, password } = req.body;
-
-    const hashpassword = await bcrypt.hash(password, 10);
-
-    const user = new Login({
-      email,
-      password: hashpassword,
-    });
-
-    await user.save();
-
-    res.json({
-      message: "register successfully",
-    });
-  } catch (err) {
-    res.json({
-      message: "user is not registered",
-    });
-  }
-});
-
-
-// LOGIN
-
-
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await Login.findOne({
-      email,
-    });
-
-    if (!user) {
-      return res.json({
-        message: "user is not found",
-      });
-    }
-
-    const match = await bcrypt.compare(password, user.password);
-
-    if (!match) {
-      return res.json({
-        message: "incorrect password",
-      });
-    }
-
-    const token = jwt.sign(
-      { userId: user._id },
-
-      "secret-",
-
-      { expiresIn: "1h" },
-    );
-    res.json({
-      message: "login successfully",
-      token,
-    });
-
-    
-  } catch (err) {
-    console.log(err);
-  }
-});
-
-// GET ALL MATCHES
-
-router.get("/", async (req, res) => {
-  const p = await Match.find();
-
-  res.json(p);
-});
-
-// ADD TEAM + GENERATE MATCHES
 router.put("/reschedule/:id", async (req, res) => {
 
   try {
 
     const { date } = req.body;
 
-    // GET ALL MATCHES SORTED
+    // GET ALL MATCHES
     const matches = await Match.find().sort({
       date: 1
     });
 
-    // FIND CURRENT MATCH INDEX
+    // FIND CURRENT MATCH
     const currentIndex = matches.findIndex(
       item => item._id.toString() === req.params.id
     );
@@ -242,9 +165,7 @@ router.put("/reschedule/:id", async (req, res) => {
     // START DATE
     let nextDate = new Date(date);
 
-    nextDate.setHours(0,0,0,0);
-
-    // UPDATE CURRENT + NEXT MATCHES
+    // UPDATE ALL NEXT MATCHES
     for (
 
       let i = currentIndex;
@@ -270,8 +191,17 @@ router.put("/reschedule/:id", async (req, res) => {
 
       }
 
-      // SAVE DATE
-      matches[i].date = new Date(nextDate);
+      // STORE ONLY DATE
+      const formattedDate =
+      `${nextDate.getFullYear()}-${
+      String(nextDate.getMonth() + 1)
+      .padStart(2,'0')
+      }-${
+      String(nextDate.getDate())
+      .padStart(2,'0')
+      }`
+
+      matches[i].date = formattedDate;
 
       await matches[i].save();
 
