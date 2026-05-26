@@ -17,7 +17,7 @@ const TournamentTree = () => {
       try {
 
          const res = await axios.get(
-            "http://localhost:3000/router/matches"
+            "https://table-tennis-tournament-five.vercel.app/router/matches"
          )
 
          setMatches(res.data)
@@ -96,7 +96,7 @@ const TournamentTree = () => {
 
          await axios.put(
 
-            `http://localhost:3000/router/reschedule/${id}`,
+            `https://table-tennis-tournament-five.vercel.app/router/reschedule/${id}`,
 
             {
                date: formattedDate

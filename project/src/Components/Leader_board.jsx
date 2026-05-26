@@ -11,7 +11,7 @@ const Leader_board = () => {
 
     try {
 
-      const res = await axios.get("http://localhost:3000/router/lead")
+      const res = await axios.get("https://table-tennis-tournament-five.vercel.app/router/lead")
 
       setData(res.data)
 
