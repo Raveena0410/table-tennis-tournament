@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import Calendar from 'react-calendar'
-import 'react-calendar/dist/Calendar.css'
-import './TT.css'
 
 const TournamentTree = () => {
 
@@ -72,7 +70,6 @@ const TournamentTree = () => {
 
       try {
 
-         // LOCAL DATE FIX
          let newDate = new Date(
 
             selectedDate.getFullYear(),
@@ -83,12 +80,10 @@ const TournamentTree = () => {
 
          )
 
-         // ADD DAYS
          newDate.setDate(
             newDate.getDate() + index
          )
 
-         // SKIP WEEKENDS
          while (
 
             newDate.getDay() === 0 ||
@@ -103,7 +98,6 @@ const TournamentTree = () => {
 
          }
 
-         // SEND ISO DATE
          const formattedDate =
          newDate.toISOString()
 
@@ -117,7 +111,6 @@ const TournamentTree = () => {
 
          )
 
-         // REFRESH MATCHES
          fetchMatches()
 
       }
@@ -142,33 +135,15 @@ const TournamentTree = () => {
          </h1>
 
 
-         {/* CALENDAR */}
+         {/* SIMPLE CALENDAR */}
 
-         <div className="d-flex justify-content-center mb-5 pb-5">
+         <div>
 
             <Calendar
 
                onChange={setSelectedDate}
 
                value={selectedDate}
-
-               minDate={new Date()}
-
-               formatDay={(locale, date) =>
-                  date.getDate()
-               }
-
-               tileDisabled={({ date }) => {
-
-                  return (
-
-                     date.getDay() === 0 ||
-
-                     date.getDay() === 6
-
-                  )
-
-               }}
 
             />
 
@@ -177,7 +152,7 @@ const TournamentTree = () => {
 
          {/* MATCHES */}
 
-         <div className="mb-5">
+         <div className="mb-5 mt-5">
 
             <h2 className="text-info mb-4">
 
