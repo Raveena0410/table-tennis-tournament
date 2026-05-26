@@ -26,6 +26,20 @@ router.post("/", async (req, res) => {
 
     const { teamA, teamB, set, winner } = req.body;
 
+    // ============================
+    // STOP IF MATCH NOT COMPLETED
+    // ============================
+
+    if (!winner || winner.trim() === "") {
+
+      return res.json({
+
+        message: "Match not completed yet"
+
+      });
+
+    }
+
     let teamAsetwon = 0;
 
     let teamBsetwon = 0;
@@ -45,6 +59,10 @@ router.post("/", async (req, res) => {
       }
 
     });
+
+    // ============================
+    // TEAM A WON
+    // ============================
 
     if (winner === teamA) {
 
@@ -93,7 +111,11 @@ router.post("/", async (req, res) => {
 
     }
 
-    else {
+    // ============================
+    // TEAM B WON
+    // ============================
+
+    else if (winner === teamB) {
 
       await Team.findOneAndUpdate(
 
@@ -140,6 +162,10 @@ router.post("/", async (req, res) => {
 
     }
 
+    // ============================
+    // UPDATE RATIOS
+    // ============================
+
     const teams = await Team.find();
 
     for (let item of teams) {
@@ -152,7 +178,8 @@ router.post("/", async (req, res) => {
 
       else {
 
-        item.ratio = item.setwon / item.setlost;
+        item.ratio =
+        (item.setwon / item.setlost).toFixed(1);
 
       }
 
