@@ -215,22 +215,7 @@ const TournamentTree = () => {
 
                            ?
 
-                           new Date(item.date)
-                           .toLocaleDateString(
-
-                              "en-IN",
-
-                              {
-
-                                 day: "2-digit",
-
-                                 month: "long",
-
-                                 year: "numeric"
-
-                              }
-
-                           )
+                           item.date
 
                            :
 
@@ -326,4 +311,4 @@ Winner SF2 ────────┘
 
 }
 
-export default TournamentTreee
+export default TournamentTree
