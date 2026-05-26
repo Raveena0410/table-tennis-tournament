@@ -231,25 +231,220 @@ router.post("/", async (req, res) => {
 // =====================================
 // LEADERBOARD
 // =====================================
+// =====================================
+// LEADERBOARD
+// =====================================
 
 router.get("/lead", async (req, res) => {
 
   try {
 
-    const t = await Team.find().sort({
+    // =====================================
+    // GET ALL TEAMS
+    // =====================================
 
-      score: -1,
-      ratio: -1,
+    const teams = await Team.find();
+
+    // =====================================
+    // RESET ALL STATS
+    // =====================================
+
+    for (let team of teams) {
+
+      team.played = 0;
+      team.won = 0;
+      team.lost = 0;
+      team.score = 0;
+      team.setwon = 0;
+      team.setlost = 0;
+      team.ratio = 0;
+
+      await team.save();
+
+    }
+
+    // =====================================
+    // GET COMPLETED MATCHES
+    // =====================================
+
+    const matches = await Match.find({
+
+      winner: {
+
+        $ne: ""
+
+      }
 
     });
 
-    res.json(t);
+    // =====================================
+    // CALCULATE STATS
+    // =====================================
+
+    for (let match of matches) {
+
+      let teamAsetwon = 0;
+      let teamBsetwon = 0;
+
+      // =====================================
+      // COUNT SETS
+      // =====================================
+
+      match.set.forEach((item) => {
+
+        if (
+
+          item.teamA_set >
+          item.teamB_set
+
+        ) {
+
+          teamAsetwon++;
+
+        }
+
+        else {
+
+          teamBsetwon++;
+
+        }
+
+      });
+
+      // =====================================
+      // TEAM A
+      // =====================================
+
+      const teamAData =
+      await Team.findOne({
+
+        team: match.teamA
+
+      });
+
+      // =====================================
+      // TEAM B
+      // =====================================
+
+      const teamBData =
+      await Team.findOne({
+
+        team: match.teamB
+
+      });
+
+      // =====================================
+      // PLAYED
+      // =====================================
+
+      teamAData.played += 1;
+      teamBData.played += 1;
+
+      // =====================================
+      // SETS
+      // =====================================
+
+      teamAData.setwon += teamAsetwon;
+      teamAData.setlost += teamBsetwon;
+
+      teamBData.setwon += teamBsetwon;
+      teamBData.setlost += teamAsetwon;
+
+      // =====================================
+      // WINNER
+      // =====================================
+
+      if (match.winner === match.teamA) {
+
+        teamAData.won += 1;
+        teamAData.score += 2;
+
+        teamBData.lost += 1;
+
+      }
+
+      else {
+
+        teamBData.won += 1;
+        teamBData.score += 2;
+
+        teamAData.lost += 1;
+
+      }
+
+      // =====================================
+      // RATIOS
+      // =====================================
+
+      if (teamAData.setlost === 0) {
+
+        teamAData.ratio =
+        teamAData.setwon;
+
+      }
+
+      else {
+
+        teamAData.ratio =
+        (
+          teamAData.setwon /
+          teamAData.setlost
+        ).toFixed(1);
+
+      }
+
+      if (teamBData.setlost === 0) {
+
+        teamBData.ratio =
+        teamBData.setwon;
+
+      }
+
+      else {
+
+        teamBData.ratio =
+        (
+          teamBData.setwon /
+          teamBData.setlost
+        ).toFixed(1);
+
+      }
+
+      // =====================================
+      // SAVE
+      // =====================================
+
+      await teamAData.save();
+      await teamBData.save();
+
+    }
+
+    // =====================================
+    // SORT LEADERBOARD
+    // =====================================
+
+    const leaderboard =
+    await Team.find().sort({
+
+      score: -1,
+      ratio: -1
+
+    });
+
+    res.json(leaderboard);
 
   }
 
   catch (err) {
 
     console.log(err);
+
+    res.json({
+
+      message:
+      "Something went wrong"
+
+    });
 
   }
 
