@@ -27,7 +27,7 @@ const tourschema=new mongoose.Schema({
     
     },
     date:{
-        type:Date,
+        type:String,
     }
     
 
