@@ -24,7 +24,7 @@ const TournamentTree = () => {
 
       }
 
-      catch (err) {
+      catch(err){
 
          console.log(err)
 
@@ -57,7 +57,9 @@ const TournamentTree = () => {
 
          )
 
+
          // ADD DAYS
+
          newDate.setDate(
             newDate.getDate() + index
          )
@@ -80,15 +82,16 @@ const TournamentTree = () => {
          }
 
 
-         // FIX TIMEZONE ISSUE
+         // STORE ONLY DATE
 
          const formattedDate =
-         new Date(
-
-            newDate.getTime() -
-            newDate.getTimezoneOffset() * 60000
-
-         ).toISOString()
+         `${newDate.getFullYear()}-${
+         String(newDate.getMonth() + 1)
+         .padStart(2,'0')
+         }-${
+         String(newDate.getDate())
+         .padStart(2,'0')
+         }`
 
 
          await axios.put(
@@ -106,7 +109,7 @@ const TournamentTree = () => {
 
       }
 
-      catch (err) {
+      catch(err){
 
          console.log(err)
 
@@ -323,4 +326,4 @@ Winner SF2 ────────┘
 
 }
 
-export default TournamentTree
+export default TournamentTreee
