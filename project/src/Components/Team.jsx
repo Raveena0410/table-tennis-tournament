@@ -26,34 +26,26 @@ const Team = () => {
 
             <h1>Participating Teams</h1>
 
-           {
-   teams.map((t,index)=>(
+          <div className="cards">
 
-      <div key={index}>
+   {
+      teams.map((t,index)=>(
 
-         <h1 style={{color:"white"}}>
+         <div className="card1" key={index}>
 
-            {t.team}
+            <h1>{t.team}</h1>
 
-         </h1>
+            <ul>
+               <li>{t.member1}</li>
+               <li>{t.member2}</li>
+            </ul>
 
-         <p style={{color:"white"}}>
+         </div>
 
-            {t.member1}
+      ))
+   }
 
-         </p>
-
-         <p style={{color:"white"}}>
-
-            {t.member2}
-
-         </p>
-
-      </div>
-
-   ))
-}
-
+</div>
         </div>
 
         </>
