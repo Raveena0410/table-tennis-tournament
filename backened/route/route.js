@@ -13,10 +13,6 @@ const router = express.Router();
 
 // =====================================
 // UPDATE MATCH RESULT
-// =====================================
-// UPDATE MATCH RESULT
-// =====================================
-
 router.post("/", async (req, res) => {
 
   try {
@@ -30,17 +26,13 @@ router.post("/", async (req, res) => {
 
     } = req.body;
 
-    // =====================================
-    // REMOVE EXTRA SPACES
-    // =====================================
-
     const teamAName = teamA.trim();
     const teamBName = teamB.trim();
 
-    // =====================================
-    // FIND EXISTING MATCH
-    // =====================================
+    console.log(teamAName);
+    console.log(teamBName);
 
+    // FIND MATCH
     const existingMatch =
     await Match.findOne({
 
@@ -64,10 +56,9 @@ router.post("/", async (req, res) => {
 
     });
 
-    // =====================================
-    // MATCH NOT FOUND
-    // =====================================
+    console.log(existingMatch);
 
+    // MATCH NOT FOUND
     if (!existingMatch) {
 
       return res.json({
@@ -78,19 +69,13 @@ router.post("/", async (req, res) => {
 
     }
 
-    // =====================================
     // UPDATE MATCH
-    // =====================================
-
     existingMatch.set = set;
     existingMatch.winner = winner;
 
     await existingMatch.save();
 
-    // =====================================
-    // RESET ALL TEAM STATS
-    // =====================================
-
+    // RESET STATS
     await Team.updateMany(
 
       {},
@@ -113,10 +98,7 @@ router.post("/", async (req, res) => {
 
     );
 
-    // =====================================
-    // GET ALL COMPLETED MATCHES
-    // =====================================
-
+    // GET COMPLETED MATCHES
     const completedMatches =
     await Match.find({
 
@@ -128,18 +110,11 @@ router.post("/", async (req, res) => {
 
     });
 
-    // =====================================
-    // RECALCULATE LEADERBOARD
-    // =====================================
-
+    // RECALCULATE
     for (let match of completedMatches) {
 
       let teamAsetwon = 0;
       let teamBsetwon = 0;
-
-      // =====================================
-      // COUNT SETS
-      // =====================================
 
       match.set.forEach((item) => {
 
@@ -162,10 +137,6 @@ router.post("/", async (req, res) => {
 
       });
 
-      // =====================================
-      // GET TEAM DATA
-      // =====================================
-
       const teamAData =
       await Team.findOne({
 
@@ -180,26 +151,14 @@ router.post("/", async (req, res) => {
 
       });
 
-      // =====================================
-      // PLAYED
-      // =====================================
-
       teamAData.played += 1;
       teamBData.played += 1;
-
-      // =====================================
-      // SETS
-      // =====================================
 
       teamAData.setwon += teamAsetwon;
       teamAData.setlost += teamBsetwon;
 
       teamBData.setwon += teamBsetwon;
       teamBData.setlost += teamAsetwon;
-
-      // =====================================
-      // WIN / LOSS
-      // =====================================
 
       if (match.winner === match.teamA) {
 
@@ -219,10 +178,7 @@ router.post("/", async (req, res) => {
 
       }
 
-      // =====================================
       // RATIO
-      // =====================================
-
       if (teamAData.setlost === 0) {
 
         teamAData.ratio =
@@ -257,10 +213,6 @@ router.post("/", async (req, res) => {
 
       }
 
-      // =====================================
-      // SAVE
-      // =====================================
-
       await teamAData.save();
       await teamBData.save();
 
@@ -289,7 +241,6 @@ router.post("/", async (req, res) => {
   }
 
 });
-
 
 // =====================================
 // LEADERBOARD
