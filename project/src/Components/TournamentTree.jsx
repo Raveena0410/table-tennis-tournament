@@ -4,37 +4,14 @@ import Calendar from 'react-calendar'
 
 const TournamentTree = () => {
 
-   const [teams, setTeams] = useState([])
-
    const [matches, setMatches] = useState([])
 
    const [selectedDate, setSelectedDate] =
    useState(new Date())
 
 
-   // FETCH TEAMS
-   const fetchTeams = async () => {
-
-      try {
-
-         const res = await axios.get(
-            "https://table-tennis-tournament-five.vercel.app/router/teams"
-         )
-
-         setTeams(res.data)
-
-      }
-
-      catch (err) {
-
-         console.log(err)
-
-      }
-
-   }
-
-
    // FETCH MATCHES
+
    const fetchMatches = async () => {
 
       try {
@@ -47,7 +24,7 @@ const TournamentTree = () => {
 
       }
 
-      catch(err){
+      catch (err) {
 
          console.log(err)
 
@@ -58,14 +35,14 @@ const TournamentTree = () => {
 
    useEffect(() => {
 
-      fetchTeams()
-
       fetchMatches()
 
    }, [])
 
 
+
    // RESCHEDULE MATCH
+
    const rescheduleMatch = async (id, index) => {
 
       try {
@@ -80,9 +57,13 @@ const TournamentTree = () => {
 
          )
 
+         // ADD DAYS
          newDate.setDate(
             newDate.getDate() + index
          )
+
+
+         // SKIP WEEKENDS
 
          while (
 
@@ -98,8 +79,17 @@ const TournamentTree = () => {
 
          }
 
+
+         // FIX TIMEZONE ISSUE
+
          const formattedDate =
-         newDate.toISOString()
+         new Date(
+
+            newDate.getTime() -
+            newDate.getTimezoneOffset() * 60000
+
+         ).toISOString()
+
 
          await axios.put(
 
@@ -111,17 +101,19 @@ const TournamentTree = () => {
 
          )
 
+
          fetchMatches()
 
       }
 
-      catch(err){
+      catch (err) {
 
          console.log(err)
 
       }
 
    }
+
 
 
    return (
@@ -135,30 +127,55 @@ const TournamentTree = () => {
          </h1>
 
 
-         {/* SIMPLE CALENDAR */}
 
-         <div>
+         {/* CALENDAR */}
+
+         <div className="mb-5">
 
             <Calendar
 
-               onChange={setSelectedDate}
+               onChange={(value) => {
+
+                  if (Array.isArray(value)) {
+
+                     setSelectedDate(value[0])
+
+                  }
+
+                  else {
+
+                     setSelectedDate(value)
+
+                  }
+
+               }}
 
                value={selectedDate}
+
+               view="month"
+
+               maxDetail="month"
+
+               minDetail="month"
+
+               selectRange={false}
 
             />
 
          </div>
 
 
+
          {/* MATCHES */}
 
-         <div className="mb-5 mt-5">
+         <div className="mb-5">
 
             <h2 className="text-info mb-4">
 
                Matches
 
             </h2>
+
 
             {
 
@@ -181,6 +198,7 @@ const TournamentTree = () => {
                         {item.teamB}
 
                      </h5>
+
 
                      <p>
 
@@ -219,6 +237,8 @@ const TournamentTree = () => {
 
                      </p>
 
+
+
                      <button
 
                         className="btn btn-warning"
@@ -245,7 +265,8 @@ const TournamentTree = () => {
          </div>
 
 
-         {/* SEMI FINALS */}
+
+         {/* SEMI FINAL */}
 
          <div className="mb-5">
 
@@ -271,6 +292,7 @@ Rank 3  ───────────┘
             </pre>
 
          </div>
+
 
 
          {/* FINAL */}

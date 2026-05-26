@@ -118,9 +118,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-// =====================================
+
 // LEADERBOARD
-// =====================================
+
 
 router.get("/lead", async (req, res) => {
   try {
@@ -135,9 +135,8 @@ router.get("/lead", async (req, res) => {
   }
 });
 
-// =====================================
+
 // SIGNUP
-// =====================================
 
 router.post("/signup", async (req, res) => {
   try {
@@ -163,9 +162,9 @@ router.post("/signup", async (req, res) => {
   }
 });
 
-// =====================================
+
 // LOGIN
-// =====================================
+
 
 router.post("/login", async (req, res) => {
   try {
