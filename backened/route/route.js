@@ -193,121 +193,65 @@ router.get("/lead", async (req, res) => {
 
   try {
 
-    // =====================================
-    // GET ALL TEAMS
-    // =====================================
-
-    const teams = await Team.find();
-
-    // =====================================
-    // RESET ALL STATS
-    // =====================================
-
-    for (let team of teams) {
-
-      team.played = 0;
-      team.won = 0;
-      team.lost = 0;
-      team.score = 0;
-      team.setwon = 0;
-      team.setlost = 0;
-      team.ratio = 0;
-
-      await team.save();
-
-    }
-
-    // =====================================
-    // GET COMPLETED MATCHES
-    // =====================================
-
-    const matches = await Match.find({
-
-      winner: {
-
-        $ne: ""
-
+    // RESET ALL TEAMS
+    await Team.updateMany(
+      {},
+      {
+        $set: {
+          played: 0,
+          won: 0,
+          lost: 0,
+          score: 0,
+          setwon: 0,
+          setlost: 0,
+          ratio: 0
+        }
       }
+    );
 
+    // GET COMPLETED MATCHES
+    const matches = await Match.find({
+      winner: { $ne: "" }
     });
 
-    // =====================================
-    // CALCULATE STATS
-    // =====================================
-
+    // LOOP THROUGH MATCHES
     for (let match of matches) {
 
       let teamAsetwon = 0;
       let teamBsetwon = 0;
 
-      // =====================================
-      // COUNT SETS
-      // =====================================
-
       match.set.forEach((item) => {
 
-        if (
-
-          item.teamA_set >
-          item.teamB_set
-
-        ) {
-
+        if (item.teamA_set > item.teamB_set) {
           teamAsetwon++;
-
         }
 
         else {
-
           teamBsetwon++;
-
         }
 
       });
 
-      // =====================================
-      // TEAM A
-      // =====================================
-
-      const teamAData =
-      await Team.findOne({
-
+      const teamAData = await Team.findOne({
         team: match.teamA
-
       });
 
-      // =====================================
-      // TEAM B
-      // =====================================
-
-      const teamBData =
-      await Team.findOne({
-
+      const teamBData = await Team.findOne({
         team: match.teamB
-
       });
 
-      // =====================================
       // PLAYED
-      // =====================================
-
       teamAData.played += 1;
       teamBData.played += 1;
 
-      // =====================================
       // SETS
-      // =====================================
-
       teamAData.setwon += teamAsetwon;
       teamAData.setlost += teamBsetwon;
 
       teamBData.setwon += teamBsetwon;
       teamBData.setlost += teamAsetwon;
 
-      // =====================================
       // WINNER
-      // =====================================
-
       if (match.winner === match.teamA) {
 
         teamAData.won += 1;
@@ -326,63 +270,26 @@ router.get("/lead", async (req, res) => {
 
       }
 
-      // =====================================
-      // RATIOS
-      // =====================================
+      // RATIO
+      teamAData.ratio =
+        teamAData.setlost === 0
+        ? teamAData.setwon
+        : (teamAData.setwon / teamAData.setlost).toFixed(1);
 
-      if (teamAData.setlost === 0) {
-
-        teamAData.ratio =
-        teamAData.setwon;
-
-      }
-
-      else {
-
-        teamAData.ratio =
-        (
-          teamAData.setwon /
-          teamAData.setlost
-        ).toFixed(1);
-
-      }
-
-      if (teamBData.setlost === 0) {
-
-        teamBData.ratio =
-        teamBData.setwon;
-
-      }
-
-      else {
-
-        teamBData.ratio =
-        (
-          teamBData.setwon /
-          teamBData.setlost
-        ).toFixed(1);
-
-      }
-
-      // =====================================
-      // SAVE
-      // =====================================
+      teamBData.ratio =
+        teamBData.setlost === 0
+        ? teamBData.setwon
+        : (teamBData.setwon / teamBData.setlost).toFixed(1);
 
       await teamAData.save();
       await teamBData.save();
 
     }
 
-    // =====================================
-    // SORT LEADERBOARD
-    // =====================================
-
-    const leaderboard =
-    await Team.find().sort({
-
+    // FINAL SORT
+    const leaderboard = await Team.find().sort({
       score: -1,
       ratio: -1
-
     });
 
     res.json(leaderboard);
@@ -393,61 +300,13 @@ router.get("/lead", async (req, res) => {
 
     console.log(err);
 
-    res.json({
-
-      message:
-      "Something went wrong"
-
+    res.status(500).json({
+      message: "Something went wrong"
     });
 
   }
 
 });
-
-
-
-// =====================================
-// SIGNUP
-// =====================================
-
-router.post("/signup", async (req, res) => {
-
-  try {
-
-    const { email, password } = req.body;
-
-    const hashpassword =
-    await bcrypt.hash(password, 10);
-
-    const user = new Login({
-
-      email,
-      password: hashpassword,
-
-    });
-
-    await user.save();
-
-    res.json({
-
-      message: "register successfully",
-
-    });
-
-  }
-
-  catch (err) {
-
-    res.json({
-
-      message: "user is not registered",
-
-    });
-
-  }
-
-});
-
 
 
 // =====================================
