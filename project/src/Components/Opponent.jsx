@@ -64,14 +64,20 @@ const Matches = () => {
         teams.map((team, index) => {
 
           // FILTER MATCHES
-          const filteredMatches = matches.filter(
+ const filteredMatches = matches.filter(
 
-            (item) =>
+  (item) =>
 
-              item.teamA === team.team ||
-              item.teamB === team.team
+    (
+      item.teamA === team.team ||
+      item.teamB === team.team
+    )
 
-          )
+    &&
+
+    item.winner !== ""
+
+)
 
           return (
 

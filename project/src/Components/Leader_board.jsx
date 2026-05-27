@@ -14,7 +14,6 @@ const Leader_board = () => {
       const res = await axios.get("https://table-tennis-tournament-five.vercel.app/router/lead")
 
       setData(res.data)
-      console.log(res.data)
 
     }
 
@@ -26,12 +25,17 @@ const Leader_board = () => {
 
   }
 
-  useEffect(() => {
+ useEffect(() => {
 
+  fetchLeaderboard()
+
+  const interval = setInterval(() => {
     fetchLeaderboard()
+  }, 3000)
 
-  }, [])
+  return () => clearInterval(interval)
 
+}, [])
   return (
 
     <>
@@ -56,27 +60,40 @@ const Leader_board = () => {
             </tr>
 
           </thead>
-
           <tbody>
 
-            {
-              data.map((item, index) => (
+{
+  data.length > 0 ? (
 
-                <tr key={item._id}>
+    data.map((item) => (
 
-                  <td>{item.team}</td>
-                  <td>{item.played}</td>
-                  <td>{item.won}</td>
-                  <td>{item.lost}</td>
-                  
-                  <td>{item.ratio}</td>
+      <tr key={item._id}>
 
-                </tr>
+        <td>{item.team}</td>
+        <td>{item.played}</td>
+        <td>{item.won}</td>
+        <td>{item.lost}</td>
+        <td>{item.ratio}</td>
 
-              ))
-            }
+      </tr>
 
-          </tbody>
+    ))
+
+  ) : (
+
+    <tr>
+
+      <td colSpan="5">
+        No leaderboard data
+      </td>
+
+    </tr>
+
+  )
+}
+
+</tbody>
+
 
         </table>
 
