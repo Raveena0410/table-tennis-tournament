@@ -27,217 +27,151 @@ router.get('/match', async(req,res)=>{
 
 })
 
-// =====================================
-// UPDATE MATCH RESULT
 router.post("/", async (req, res) => {
 
   try {
 
-    const {
+    await Match.create(req.body);
 
-      teamA,
-      teamB,
-      set,
-      winner
+    const { teamA, teamB, set, winner } = req.body;
 
-    } = req.body;
+    let teamAsetwon = 0;
 
-    const teamAName = teamA.trim();
-    const teamBName = teamB.trim();
+    let teamBsetwon = 0;
 
-    console.log(teamAName);
-    console.log(teamBName);
+    set.forEach((item) => {
 
-    // FIND MATCH
-    const existingMatch =
-    await Match.findOne({
+      if (item.teamA_set > item.teamB_set) {
 
-      $or: [
+        teamAsetwon++;
+
+      }
+
+      else {
+
+        teamBsetwon++;
+
+      }
+
+    });
+
+    if (winner === teamA) {
+
+      await Team.findOneAndUpdate(
+
+        { team: teamA },
 
         {
 
-          teamA: teamAName,
-          teamB: teamBName
+          $inc: {
+
+            played: 1,
+            won: 1,
+            score: 2,
+            setwon: teamAsetwon,
+            setlost: teamBsetwon,
+
+          },
 
         },
 
+        { upsert: true, new: true }
+
+      );
+
+      await Team.findOneAndUpdate(
+
+        { team: teamB },
+
         {
 
-          teamA: teamBName,
-          teamB: teamAName
+          $inc: {
 
-        }
+            played: 1,
+            lost: 1,
+            setwon: teamBsetwon,
+            setlost: teamAsetwon,
 
-      ]
+          },
 
-    });
+        },
 
-    console.log(existingMatch);
+        { upsert: true, new: true }
 
-    // MATCH NOT FOUND
-    if (!existingMatch) {
-
-      return res.json({
-
-        message: "Match not found"
-
-      });
+      );
 
     }
 
-    // UPDATE MATCH
-    existingMatch.set = set;
-    existingMatch.winner = winner;
+    else {
 
-    await existingMatch.save();
+      await Team.findOneAndUpdate(
 
-    // RESET STATS
-    await Team.updateMany(
+        { team: teamB },
 
-      {},
+        {
 
-      {
+          $inc: {
 
-        $set: {
+            played: 1,
+            won: 1,
+            score: 2,
+            setwon: teamBsetwon,
+            setlost: teamAsetwon,
 
-          played: 0,
-          won: 0,
-          lost: 0,
-          score: 0,
-          setwon: 0,
-          setlost: 0,
-          ratio: 0
+          },
 
-        }
+        },
 
-      }
+        { upsert: true, new: true }
 
-    );
+      );
 
-    // GET COMPLETED MATCHES
-    const completedMatches =
-    await Match.find({
+      await Team.findOneAndUpdate(
 
-      winner: {
+        { team: teamA },
 
-        $ne: ""
+        {
 
-      }
+          $inc: {
 
-    });
+            played: 1,
+            lost: 1,
+            setwon: teamAsetwon,
+            setlost: teamBsetwon,
 
-    // RECALCULATE
-    for (let match of completedMatches) {
+          },
 
-      let teamAsetwon = 0;
-      let teamBsetwon = 0;
+        },
 
-      match.set.forEach((item) => {
+        { upsert: true, new: true }
 
-        if (
+      );
 
-          Number(item.teamA_set) >
-          Number(item.teamB_set)
+    }
 
-        ) {
+    const teams = await Team.find();
 
-          teamAsetwon++;
+    for (let item of teams) {
 
-        }
+      if (item.setlost === 0) {
 
-        else {
-
-          teamBsetwon++;
-
-        }
-
-      });
-
-      const teamAData =
-      await Team.findOne({
-
-        team: match.teamA
-
-      });
-
-      const teamBData =
-      await Team.findOne({
-
-        team: match.teamB
-
-      });
-
-      teamAData.played += 1;
-      teamBData.played += 1;
-
-      teamAData.setwon += teamAsetwon;
-      teamAData.setlost += teamBsetwon;
-
-      teamBData.setwon += teamBsetwon;
-      teamBData.setlost += teamAsetwon;
-
-      if (match.winner === match.teamA) {
-
-        teamAData.won += 1;
-        teamAData.score += 2;
-
-        teamBData.lost += 1;
+        item.ratio = item.setwon;
 
       }
 
       else {
 
-        teamBData.won += 1;
-        teamBData.score += 2;
-
-        teamAData.lost += 1;
+        item.ratio = item.setwon / item.setlost;
 
       }
 
-      // RATIO
-      if (teamAData.setlost === 0) {
-
-        teamAData.ratio =
-        teamAData.setwon;
-
-      }
-
-      else {
-
-        teamAData.ratio =
-        (
-          teamAData.setwon /
-          teamAData.setlost
-        ).toFixed(1);
-
-      }
-
-      if (teamBData.setlost === 0) {
-
-        teamBData.ratio =
-        teamBData.setwon;
-
-      }
-
-      else {
-
-        teamBData.ratio =
-        (
-          teamBData.setwon /
-          teamBData.setlost
-        ).toFixed(1);
-
-      }
-
-      await teamAData.save();
-      await teamBData.save();
+      await item.save();
 
     }
 
     res.json({
 
-      message:
-      "Match Updated Successfully"
+      message: "Data saved successfully",
 
     });
 
@@ -246,13 +180,6 @@ router.post("/", async (req, res) => {
   catch (err) {
 
     console.log(err);
-
-    res.json({
-
-      message:
-      "Something went wrong"
-
-    });
 
   }
 
