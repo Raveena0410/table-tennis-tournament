@@ -3,9 +3,27 @@ import axios from 'axios'
 
 const Matches = () => {
 
-  const [matches, setMatches] = useState([])
-  const [teams, setteams] = useState([])
+const [matches, setMatches] = useState(() => {
 
+  const saved =
+  localStorage.getItem("matches")
+
+  return saved
+    ? JSON.parse(saved)
+    : []
+
+})
+
+const [teams, setteams] = useState(() => {
+
+  const saved =
+  localStorage.getItem("teams")
+
+  return saved
+    ? JSON.parse(saved)
+    : []
+
+})
   // FETCH MATCHES
   const fetchMatches = async () => {
 
@@ -16,6 +34,11 @@ const Matches = () => {
       )
 
       setMatches(res.data)
+
+localStorage.setItem(
+  "matches",
+  JSON.stringify(res.data)
+)
 
     }
 
@@ -37,6 +60,11 @@ const Matches = () => {
       )
 
       setteams(res.data)
+
+localStorage.setItem(
+  "teams",
+  JSON.stringify(res.data)
+)
 
     }
 

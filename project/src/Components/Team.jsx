@@ -4,7 +4,16 @@ import './Team.css'
 
 const Team = () => {
 
-    const [teams, setTeams] = useState([])
+    const [teams, setTeams] = useState(() => {
+
+   const saved =
+   localStorage.getItem("teams")
+
+   return saved
+      ? JSON.parse(saved)
+      : []
+
+})
 
     const fetchTeams = async() => {
 
@@ -12,7 +21,12 @@ const Team = () => {
             "https://table-tennis-tournament-five.vercel.app/router/teams"
         )
 
-        setTeams(res.data)
+         setTeams(res.data)
+
+localStorage.setItem(
+   "teams",
+   JSON.stringify(res.data)
+)
     }
 
     useEffect(() => {

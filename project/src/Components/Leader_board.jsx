@@ -5,7 +5,16 @@ import './Lead.css'
 
 const Leader_board = () => {
 
-  const [data, setData] = useState([])
+  const [data, setData] = useState(() => {
+
+  const saved =
+  localStorage.getItem("leaderboard")
+
+  return saved
+    ? JSON.parse(saved)
+    : []
+
+})
 
   const fetchLeaderboard = async () => {
 
@@ -14,6 +23,11 @@ const Leader_board = () => {
       const res = await axios.get("https://table-tennis-tournament-five.vercel.app/router/lead")
 
       setData(res.data)
+
+localStorage.setItem(
+  "leaderboard",
+  JSON.stringify(res.data)
+)
 
     }
 
@@ -29,13 +43,8 @@ const Leader_board = () => {
 
   fetchLeaderboard()
 
-  const interval = setInterval(() => {
-    fetchLeaderboard()
-  }, 3000)
 
-  return () => clearInterval(interval)
-
-}, [])
+},[])
   return (
 
     <>
@@ -54,6 +63,7 @@ const Leader_board = () => {
               <th>Played</th>
               <th>Won</th>
               <th>Lost</th>
+              <th>Score</th>
               
               <th>Ratio</th>
 
@@ -73,6 +83,7 @@ const Leader_board = () => {
         <td>{item.played}</td>
         <td>{item.won}</td>
         <td>{item.lost}</td>
+        <td>{item.score}</td>
         <td>{item.ratio}</td>
 
       </tr>

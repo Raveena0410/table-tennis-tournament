@@ -202,6 +202,33 @@ const TournamentTree = () => {
                         }
 
                      </p>
+                     <p>
+
+   Status :
+
+   {
+
+      item.winner !== ""
+
+      ?
+
+      <span className="text-success fw-bold">
+
+         Completed
+
+      </span>
+
+      :
+
+      <span className="text-warning fw-bold">
+
+         Pending
+
+      </span>
+
+   }
+
+</p>
 
 
 
