@@ -123,8 +123,10 @@ Keep the review concise.
 
                 except Exception as e:
 
+                    last_error = str(e)
+
                     print(f"Attempt {attempt + 1} failed")
-                    print(e)
+                    print(last_error)
 
                     import time
                     time.sleep(10)
@@ -137,7 +139,12 @@ Keep the review concise.
             else:
 
                 full_review += f"\n\n### File: {file.filename}\n\n"
-                full_review += "Gemini review failed after 3 attempts.\n"
+                full_review += f"""
+Gemini review failed after 3 attempts.
+
+Error:
+{last_error}
+"""
 
         if full_review.strip():
 
