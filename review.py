@@ -41,7 +41,46 @@ for repo in g.get_user().get_repos():
                 continue
 
             print(f"Reviewing file: {file.filename}")
-            pr_history = "No previous PR history found"
+            related_prs = []
+
+            try:
+
+               for old_pr in repo.get_pulls(state="closed"):
+
+                  if old_pr.number == pr.number:
+                        continue
+
+                        try:
+
+                           for old_file in old_pr.get_files():
+
+                               if old_file.filename == file.filename:
+
+                                    related_prs.append(
+                        f"""
+PR #{old_pr.number}
+Title: {old_pr.title}
+
+Patch:
+{old_file.patch}
+"""
+                    )
+
+                           break
+
+                        except Exception:
+                          pass
+
+                        if len(related_prs) >= 3:
+                                  break
+
+            except Exception as e:
+                print(f"PR History Error: {e}")
+
+                pr_history = "\n".join(related_prs)
+
+                if not pr_history:
+                  pr_history = "No previous PR history found"
 
             
             response = None
@@ -123,7 +162,7 @@ Error:
 {last_error}
 """
 
-        if full_review.strip():
+if full_review.strip():
 
             pr.create_issue_comment(
                 f"""
