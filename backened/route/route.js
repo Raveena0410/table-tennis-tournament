@@ -185,15 +185,15 @@ router.post("/", async (req, res) => {
 
 });
 
-// =====================================
+
 // LEADERBOARD
-// =====================================
+
 
 router.get("/lead", async (req, res) => {
 
   try {
 
-    // RESET ALL TEAMS
+  
     await Team.updateMany(
       {},
       {
@@ -209,7 +209,7 @@ router.get("/lead", async (req, res) => {
       }
     );
 
-    // GET COMPLETED MATCHES
+    
     const matches = await Match.find({
       winner: { $ne: "" }
     });
@@ -309,9 +309,9 @@ router.get("/lead", async (req, res) => {
 });
 
 
-// =====================================
+
 // LOGIN
-// =====================================
+
 
 router.post("/login", async (req, res) => {
 
@@ -380,9 +380,8 @@ router.post("/login", async (req, res) => {
 
 
 
-// =====================================
+
 // GET ALL MATCHES
-// =====================================
 
 router.get("/", async (req, res) => {
 
@@ -394,17 +393,17 @@ router.get("/", async (req, res) => {
 
 
 
-// =====================================
+
 // ADD TEAM + GENERATE MATCHES
-// =====================================
+
 
 router.post("/addteam", async (req, res) => {
 
   try {
 
-    // =====================================
+    
     // CHECK DUPLICATE TEAM
-    // =====================================
+    
 
     const existingTeam =
     await Team.findOne({
@@ -428,15 +427,13 @@ router.post("/addteam", async (req, res) => {
 
     await newTeam.save();
 
-    // =====================================
+  
     // DELETE OLD MATCHES
-    // =====================================
+    
 
     await Match.deleteMany();
 
-    // =====================================
-    // RESET TEAM STATS
-    // =====================================
+    
 
     await Team.updateMany(
 
@@ -460,9 +457,7 @@ router.post("/addteam", async (req, res) => {
 
     );
 
-    // =====================================
-    // GET ALL TEAMS
-    // =====================================
+    
 
     const teams = await Team.find().sort({
 
@@ -508,9 +503,7 @@ router.post("/addteam", async (req, res) => {
 
     }
 
-    // =====================================
-    // SAVE MATCHES
-    // =====================================
+    
 
     await Match.insertMany(matches);
 
@@ -533,9 +526,6 @@ router.post("/addteam", async (req, res) => {
 
 
 
-// =====================================
-// GET ALL TEAMS
-// =====================================
 
 router.get("/teams", async (req, res) => {
 
@@ -547,9 +537,7 @@ router.get("/teams", async (req, res) => {
 
 
 
-// =====================================
-// GET SORTED MATCHES
-// =====================================
+
 
 router.get("/matches", async (req, res) => {
 
@@ -575,9 +563,7 @@ router.get("/matches", async (req, res) => {
 
 
 
-// =====================================
-// RESCHEDULE MATCH
-// =====================================
+
 
 router.put("/reschedule/:id", async (req, res) => {
 
@@ -585,20 +571,14 @@ router.put("/reschedule/:id", async (req, res) => {
 
     const { date } = req.body;
 
-    // =====================================
-    // GET ALL MATCHES SORTED
-    // =====================================
-
+    
     const matches = await Match.find().sort({
 
       date: 1
 
     });
 
-    // =====================================
-    // FIND CURRENT MATCH
-    // =====================================
-
+    
     const currentIndex = matches.findIndex(
 
       item =>
@@ -616,15 +596,10 @@ router.put("/reschedule/:id", async (req, res) => {
 
     }
 
-    // =====================================
-    // START DATE
-    // =====================================
-
+    
     let nextDate = new Date(date);
 
-    // =====================================
-    // UPDATE MATCHES
-    // =====================================
+   
 
     for (
 
@@ -640,9 +615,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
       while (!uniqueDateFound) {
 
-        // =====================================
-        // SKIP WEEKENDS
-        // =====================================
+      
 
         while (
 
@@ -672,9 +645,7 @@ router.put("/reschedule/:id", async (req, res) => {
         .padStart(2, '0')
         }`;
 
-        // =====================================
-        // CHECK DUPLICATE DATE
-        // =====================================
+        
 
         const existingMatch =
         await Match.findOne({
@@ -689,9 +660,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
         });
 
-        // =====================================
-        // IF DATE FREE
-        // =====================================
+        
 
         if (!existingMatch) {
 
@@ -703,9 +672,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
         }
 
-        // =====================================
-        // IF DATE EXISTS
-        // =====================================
+        
 
         else {
 
@@ -717,10 +684,7 @@ router.put("/reschedule/:id", async (req, res) => {
 
       }
 
-      // =====================================
-      // NEXT DAY
-      // =====================================
-
+      
       nextDate.setDate(
         nextDate.getDate() + 1
       );
