@@ -41,34 +41,11 @@ for repo in g.get_user().get_repos():
                 continue
 
             print(f"Reviewing file: {file.filename}")
+            pr_history = "No previous PR history found"
 
-            history = []
-
-            try:
-                commits = repo.get_commits(path=file.filename)
-
-                count = 0
-
-                for commit in commits:
-
-                    history.append(
-                        f"""
-Commit: {commit.sha[:7]}
-Message: {commit.commit.message}
-"""
-                    )
-
-                    count += 1
-
-                    if count >= 5:
-                        break
-
-            except Exception as e:
-                print(f"History Error: {e}")
-
-            file_history = "\n".join(history)
-
+            
             response = None
+            last_error=""
 
             for attempt in range(3):
 
@@ -95,7 +72,7 @@ Current Changed Code:
 {file.patch}
 
 Recent History For This File:
-{file_history}
+{pr_history}
 
 Tasks:
 
