@@ -1,4 +1,5 @@
 import os
+import time
 from github import Github
 from google import genai
 
@@ -10,9 +11,6 @@ g = Github(TOKEN)
 client = genai.Client(
     api_key=GEMINI_API_KEY
 )
-
-
-
 
 for repo in g.get_user().get_repos():
 
@@ -41,50 +39,51 @@ for repo in g.get_user().get_repos():
                 continue
 
             print(f"Reviewing file: {file.filename}")
+
+            # Find previous PRs touching the same file
             related_prs = []
 
             try:
 
-               for old_pr in repo.get_pulls(state="closed"):
+                for old_pr in repo.get_pulls(state="closed"):
 
-                  if old_pr.number == pr.number:
+                    if old_pr.number == pr.number:
                         continue
 
-                        try:
+                    try:
 
-                           for old_file in old_pr.get_files():
+                        for old_file in old_pr.get_files():
 
-                               if old_file.filename == file.filename:
+                            if old_file.filename == file.filename:
 
-                                    related_prs.append(
-                        f"""
+                                related_prs.append(
+                                    f"""
 PR #{old_pr.number}
 Title: {old_pr.title}
 
 Patch:
 {old_file.patch}
 """
-                    )
+                                )
 
-                           break
+                                break
 
-                        except Exception:
-                          pass
+                    except Exception:
+                        pass
 
-                        if len(related_prs) >= 3:
-                                  break
+                    if len(related_prs) >= 3:
+                        break
 
             except Exception as e:
                 print(f"PR History Error: {e}")
 
-                pr_history = "\n".join(related_prs)
+            pr_history = "\n".join(related_prs)
 
-                if not pr_history:
-                  pr_history = "No previous PR history found"
+            if not pr_history:
+                pr_history = "No previous PR history found"
 
-            
             response = None
-            last_error=""
+            last_error = ""
 
             for attempt in range(3):
 
@@ -110,13 +109,13 @@ File:
 Current Changed Code:
 {file.patch}
 
-Recent History For This File:
+Previous PR History For This File:
 {pr_history}
 
 Tasks:
 
 1. Review the current patch.
-2. Compare with recent changes to this file.
+2. Compare with previous PRs touching this file.
 3. Detect repeated mistakes.
 4. Detect reintroduced bugs.
 5. Detect security issues.
@@ -144,7 +143,6 @@ Keep the review concise.
                     print(f"Attempt {attempt + 1} failed")
                     print(last_error)
 
-                    import time
                     time.sleep(10)
 
             if response:
@@ -162,7 +160,7 @@ Error:
 {last_error}
 """
 
-if full_review.strip():
+        if full_review.strip():
 
             pr.create_issue_comment(
                 f"""
