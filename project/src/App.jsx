@@ -43,7 +43,7 @@ function App() {
           }
         />
 
-        {/* HOME */}
+        /* {/* HOME */}
         <Route
           path="/home"
           element={
@@ -54,7 +54,7 @@ function App() {
               <Tree />
             </>
           }
-        />
+        /> */
 
         {/* PAGE 1 */}
         <Route
