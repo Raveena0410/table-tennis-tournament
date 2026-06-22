@@ -1,5 +1,5 @@
-const mongoose=require('mongoose')
-const tourschema=new mongoose.Schema({
+// const mongoose=require('mongoose')
+// const tourschema=new mongoose.Schema({
     teamA:{
         type:String,
         
