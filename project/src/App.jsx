@@ -1,15 +1,15 @@
-import './App.css'
+// import './App.css'
 
-import Navbar from './Components/Navbar'
-import Team from './Components/Team'
-import Lead from './Components/Leader_board'
-import Tree from './Components/TournamentTree'
+// import Navbar from './Components/Navbar'
+// import Team from './Components/Team'
+// import Lead from './Components/Leader_board'
+// import Tree from './Components/TournamentTree'
 
-import Page1 from './Pages/Page1'
-import Page2 from './Pages/Page2'
-import Page3 from './Pages/Page3'
-import Page4 from './Pages/Page4'
-import TeamForm from './Pages/TeamForm'
+// import Page1 from './Pages/Page1'
+// import Page2 from './Pages/Page2'
+// import Page3 from './Pages/Page3'
+// import Page4 from './Pages/Page4'
+// import TeamForm from './Pages/TeamForm'
 
 import { Routes, Route } from 'react-router-dom'
 
