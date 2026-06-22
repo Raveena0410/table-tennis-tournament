@@ -42,31 +42,102 @@ for repo in g.get_user().get_repos():
 
             print(f"Reviewing file: {file.filename}")
 
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=f"""
+            history = []
+
+            try:
+                commits = repo.get_commits(path=file.filename)
+
+                count = 0
+
+                for commit in commits:
+
+                    history.append(
+                        f"""
+Commit: {commit.sha[:7]}
+Message: {commit.commit.message}
+"""
+                    )
+
+                    count += 1
+
+                    if count >= 5:
+                        break
+
+            except Exception as e:
+                print(f"History Error: {e}")
+
+            file_history = "\n".join(history)
+
+            response = None
+
+            for attempt in range(3):
+
+                try:
+
+                    response = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=f"""
 You are a senior software engineer reviewing a GitHub Pull Request.
 
-Repository: {repo.name}
-File: {file.filename}
+Repository:
+{repo.name}
 
-Changed Code:
+PR Title:
+{pr.title}
+
+PR Description:
+{pr.body}
+
+File:
+{file.filename}
+
+Current Changed Code:
 {file.patch}
+
+Recent History For This File:
+{file_history}
+
+Tasks:
+
+1. Review the current patch.
+2. Compare with recent changes to this file.
+3. Detect repeated mistakes.
+4. Detect reintroduced bugs.
+5. Detect security issues.
+6. Detect performance issues.
+7. Give suggestions.
 
 Provide:
 
-1. Summary
-2. Bugs
-3. Security Issues
-4. Performance Issues
-5. Suggestions
+- Summary
+- Bugs
+- Security Issues
+- Performance Issues
+- Suggestions
 
 Keep the review concise.
 """
-            )
+                    )
 
-            full_review += f"\n\n### File: {file.filename}\n\n"
-            full_review += response.text
+                    break
+
+                except Exception as e:
+
+                    print(f"Attempt {attempt + 1} failed")
+                    print(e)
+
+                    import time
+                    time.sleep(10)
+
+            if response:
+
+                full_review += f"\n\n### File: {file.filename}\n\n"
+                full_review += response.text
+
+            else:
+
+                full_review += f"\n\n### File: {file.filename}\n\n"
+                full_review += "Gemini review failed after 3 attempts.\n"
 
         if full_review.strip():
 
@@ -79,4 +150,3 @@ Keep the review concise.
             )
 
             print(f"Review posted on PR #{pr.number}")
-# REVIEW CHANGED SEE IS IT CORRECT 
